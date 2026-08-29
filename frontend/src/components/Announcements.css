@@ -1,0 +1,88 @@
+.announcements-container {
+  padding: 20px;
+}
+
+.high-priority-section {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  padding: 20px;
+  border-radius: 8px;
+  color: white;
+}
+
+.high-priority-section h5 {
+  color: white;
+}
+
+.card-danger {
+  background-color: #ffe0e0;
+  border-color: #ff6b6b;
+}
+
+.card-danger .card-body {
+  color: #333;
+}
+
+.announcements-list .card {
+  border: 1px solid #ddd;
+  transition: all 0.3s ease;
+}
+
+.announcements-list .card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.announcements-list .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.3s ease;
+}
+
+.announcements-list .card-header:hover {
+  background-color: #e9ecef;
+}
+
+.announcements-list .card.unread {
+  border-left: 4px solid #007bff;
+  background-color: #f0f8ff;
+}
+
+.announcements-list .card.unread .card-header {
+  background-color: #e7f3ff;
+  font-weight: bold;
+}
+
+.announcement-card .card-body {
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.badge {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000;
+}
+
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+}
+
+@media (max-width: 768px) {
+  .announcements-container {
+    padding: 10px;
+  }
+
+  .announcement-card .card-body {
+    font-size: 14px;
+  }
+}

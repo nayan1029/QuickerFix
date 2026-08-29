@@ -4,6 +4,8 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AadharVerification from './pages/AadharVerification';
+import AdminRegistration from './pages/AdminRegistration';
 import CitizenPortal from './pages/CitizenPortal';
 import WorkerPortal from './pages/WorkerPortal';
 import AdminDashboard from './pages/AdminDashboard';
@@ -29,6 +31,8 @@ const AppContent = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/aadhar-verify" element={<AadharVerification />} />
+        <Route path="/admin-register" element={<AdminRegistration />} />
         
         <Route path="/citizen" element={
           <ProtectedRoute allowedRole="CITIZEN">

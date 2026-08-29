@@ -1,0 +1,28 @@
+.location-picker {
+  padding: 20px;
+}
+
+.location-controls {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.map-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.location-info {
+  background-color: #e7f3ff;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #0066cc;
+}
+
+.location-info strong {
+  color: #0066cc;
+}

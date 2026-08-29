@@ -2,7 +2,7 @@
 ## From Basics to Deployment | Phase-by-Phase
 **Author:** Nayan Kumar Shukla | VIT Bhopal University | B.Tech CSE  
 **Tech Stack:** Java 21 · Spring Boot 3.2.5 · Spring Security 6 · JWT · PostgreSQL · React 18 · Bootstrap 5  
-**Purpose:** TCS Ninja / Digital Interview Project Reference
+
 
 ---
 
@@ -22,10 +22,17 @@
 - [13. Phase 10 — Services (Business Logic)](#section-13-phase-10--services-business-logic)
 - [14. Phase 11 — Controllers (REST API)](#section-14-phase-11--controllers-rest-api)
 - [15. Phase 12 — Frontend (React + Bootstrap 5)](#section-15-phase-12--frontend-react--bootstrap-5)
-- [16. Running the Application](#section-16-running-the-application)
-- [17. Docker Deployment](#section-17-docker-deployment)
-- [18. REST API Reference](#section-18-complete-rest-api-reference)
-- [19. TCS Interview Q&A](#section-19-tcs-interview-preparation)
+- [**ENHANCED FEATURES - NEW**](#enhanced-features)
+  - [20. Aadhar & OTP Identity Verification](#section-20-aadhar--otp-identity-verification)
+  - [21. Admin Registration & Verification System](#section-21-admin-registration--verification-system)
+  - [22. Location Intelligence (Google Maps & State/District DB)](#section-22-location-intelligence)
+  - [23. Real-Time Chat System](#section-23-real-time-chat-system)
+  - [24. Announcements & Notifications System](#section-24-announcements--notifications-system)
+  - [25. Identity Verification Workflow](#section-25-identity-verification-workflow)
+- [26. Running the Application](#section-26-running-the-application)
+- [27. Docker Deployment](#section-27-docker-deployment)
+- [28. REST API Reference](#section-28-complete-rest-api-reference)
+- [29. TCS Interview Q&A](#section-29-tcs-interview-preparation)
 
 ---
 
@@ -50,6 +57,12 @@ A citizen-facing full-stack platform where residents report civic problems (poth
 | No accountability | Workers must upload photographic proof of resolution |
 | No verification | Citizens verify and confirm closure (or reopen if unsatisfied) |
 | Unfair closure | CITIZEN_VERIFICATION stage — citizen has final say |
+| False complaints | **Aadhar-based identity verification with OTP** — prevents fraudulent complaints |
+| Rogue admins | **Admin registration + verification** with designation/post transparency |
+| Wrong location | **Google Maps API + State/District DB** — precise geo-location tracking |
+| No communication | **Real-time chat** between citizens ↔ admins ↔ workers |
+| Lack of awareness | **Announcements system** for government notifications & essential updates |
+| Identity fraud | **Multi-tier identity verification** — admin verifies Aadhar authenticity |
 
 ### 1.4 Complete 8-Stage Complaint Lifecycle
 ```text
@@ -100,9 +113,119 @@ When citizen submits a report:
 ### 1.7 Roles & Access Control
 | Role | What They Can Do |
 |------|------------------|
-| CITIZEN | Submit reports, upvote, comment, verify/reject resolution, rate |
-| WORKER | View assigned tasks, accept/reject assignments, upload resolution proof |
-| ADMIN | Verify reports, assign workers, manage users/categories/departments, view analytics |
+| CITIZEN | Submit reports (Aadhar-verified), upvote, comment, verify/reject resolution, rate, chat with admin |
+| WORKER | View assigned tasks, accept/reject assignments, upload resolution proof, chat with citizen/admin |
+| ADMIN | Verify reports, verify citizen identity (Aadhar), assign workers, manage users/categories/departments, broadcast announcements, chat with citizens, view analytics |
+
+### 1.8 Enhanced Features — Aadhar, Admin Verification, Location Intelligence, Chat & Announcements
+
+#### A. Aadhar-Based Identity Verification
+- **Citizen Registration Flow:**
+  1. Citizen enters Aadhar number during registration
+  2. System validates Aadhar format and generates OTP
+  3. OTP sent to registered mobile number (via SMS/Email)
+  4. Citizen verifies OTP — identity confirmed
+  5. Report submission only allowed for verified citizens
+  6. Prevents duplicate accounts and false complaints
+
+- **Database Integration:**
+  - `aadhar_records` table: Stores verified Aadhar mappings (encrypted)
+  - `otp_records` table: OTP generation, validation, expiry tracking (5-minute expiry)
+  - `identity_verification_logs` table: Audit trail of all verification attempts
+
+#### B. Admin Registration & Verification System
+- **Admin Registration Process:**
+  1. Admin enters: name, email, phone, Aadhar, designation, post, department
+  2. System generates unique admin ID
+  3. Status: `PENDING_VERIFICATION` → `VERIFIED` → `ACTIVE`
+  4. Super-admin reviews credentials and approves
+  5. Admin receives login credentials via secure email
+  6. First login requires password change
+  7. Admin profile shows designation/post for transparency
+
+- **Transparency Features:**
+  - Public "Admins Directory" showing all verified admins with designations
+  - Audit trail: Who verified each admin, timestamp, reasons
+  - Department mapping: Citizens know which admin oversees their area
+
+#### C. Google Maps API & State/District Database
+- **Hierarchical Geographic Database:**
+  - `states` table: All Indian states (28 states + 8 UTs)
+  - `districts` table: 750+ districts with state_id FK
+  - `areas_or_zones` table: Sub-district localities with coordinates
+  - Location hierarchy: State → District → Area/Zone
+
+- **Google Maps Integration:**
+  - Frontend: Google Maps embed for real-time location selection
+  - Citizen drops pin → auto-fills address via reverse geocoding
+  - Geocoding API: Converts address to lat/lng
+  - Distance Matrix API: Calculates distance between complaint and worker
+  - Route optimization: Admin assigns workers closest to issue location
+
+- **Duplicate Detection Enhancement:**
+  - Original Haversine 100m radius now geo-zone aware
+  - Detects duplicates within same state/district only (avoids false matches)
+  - Automatic: If duplicate found → original report gets +1 to duplicateCount → priority recalculated
+
+#### D. Real-Time Chat System
+- **Chat Participants:**
+  - Citizen ↔ Assigned Admin (status updates, clarifications)
+  - Admin ↔ Assigned Worker (task coordination)
+  - Worker ↔ Citizen (work progress updates)
+
+- **Database:**
+  - `chat_messages` table: message_id, sender_id, receiver_id, report_id, content, timestamp, is_read
+  - `chat_rooms` table: report_id, participants, created_at, archived (one room per report)
+
+- **Features:**
+  - Real-time delivery via WebSocket (optional) or polling
+  - Message history searchable per report
+  - Attachments: Photos, documents within chat
+  - Read receipts: "Message read at HH:MM:SS"
+  - Typing indicators: "Admin is typing..."
+  - Archive old chats when report closed
+
+#### E. Announcements & Notifications System
+- **Announcement Types:**
+  1. **System Announcements:** Platform maintenance, new features
+  2. **Area Announcements:** Specific to districts/zones (e.g., "Road work in XYZ area next week")
+  3. **Category Announcements:** Relevant to complaint types (e.g., "Water supply alert for pothole reports")
+  4. **Emergency Alerts:** High-priority notifications requiring immediate action
+
+- **Database:**
+  - `announcements` table: announcement_id, title, content, created_by_id (admin), scope (ALL/DISTRICT/CATEGORY), target_location, created_at, expires_at, priority
+  - `announcement_reads` table: announcement_id, user_id, read_at (for tracking citizen engagement)
+
+- **Delivery Channels:**
+  - In-app dashboard widget (featured announcements)
+  - Email notifications (daily digest)
+  - SMS push for high-priority alerts
+  - Admin broadcast dashboard to create/schedule announcements
+
+#### F. Multi-Tier Identity Verification Workflow
+```text
+┌─────────────────────────────────────────┐
+│  Citizen Registers with Aadhar & OTP    │
+│  (Identity verified by AADHAAR DB)      │
+└────────────────┬────────────────────────┘
+                 │
+┌────────────────▼────────────────────────┐
+│  Citizen Submits Complaint               │
+│  (Aadhar-verified citizen only)          │
+└────────────────┬────────────────────────┘
+                 │
+┌────────────────▼────────────────────────┐
+│  Admin Reviews Complaint                 │
+│  - Checks citizen Aadhar match            │
+│  - Validates complaint authenticity       │
+│  - May request additional verification   │
+└────────────────┬────────────────────────┘
+                 │
+┌────────────────▼────────────────────────┐
+│  Status: VERIFIED (Identity confirmed)   │
+│  Proceed to ASSIGNED stage               │
+└─────────────────────────────────────────┘
+```
 
 ---
 
@@ -110,16 +233,17 @@ When citizen submits a report:
 
 ### 2.1 High-Level Architecture
 ```text
-┌─────────────────────────────────────────┐
-│         React Frontend (Port 3000)       │
-│  Bootstrap 5 · Axios · React Router v6  │
-└─────────────────┬───────────────────────┘
-                  │ HTTP/JSON + JWT Bearer Token
-┌─────────────────▼───────────────────────┐
-│      Spring Boot Backend (Port 8080)     │
-│  ┌─────────────────────────────────┐     │
-│  │ Spring Security + JWT Filter    │     │
-│  ├─────────────────────────────────┤     │
+┌─────────────────────────────────────────────────────────────────┐
+│         React Frontend (Port 3000)                               │
+│  Bootstrap 5 · Axios · React Router v6 · Google Maps SDK        │
+│  Real-time Chat (WebSocket) · Google Geolocation API            │
+└─────────────────┬───────────────────────────────────────────────┘
+                  │ HTTP/JSON + JWT Bearer Token + WebSocket
+┌─────────────────▼───────────────────────────────────────────────┐
+│      Spring Boot Backend (Port 8080)                             │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Spring Security + JWT Filter + OTP Validation           │   │
+│  ├──────────────────────────────────────────────────────────┤   │
 │  │ Controller Layer (REST APIs)    │     │
 │  ├─────────────────────────────────┤     │
 │  │ Service Layer (Business Logic)  │     │
