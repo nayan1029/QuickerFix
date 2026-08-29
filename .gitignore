@@ -1,0 +1,17 @@
+# Backend (Spring Boot)
+backend/target/
+backend/uploads/
+*.class
+*.log
+*.jar
+
+# Frontend (React)
+frontend/node_modules/
+frontend/build/
+frontend/npm-debug.log*
+
+# OS & IDE Files
+.idea/
+*.iml
+.vscode/
+.DS_Store

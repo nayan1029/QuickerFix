@@ -1,0 +1,38 @@
+body {
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border-radius: 12px;
+}
+
+.badge-status {
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.priority-high { color: #dc3545; font-weight: 700; }
+.priority-medium { color: #fd7e14; font-weight: 600; }
+.priority-low { color: #28a745; font-weight: 500; }
+
+.lifecycle-step { 
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 2px;
+}
+
+.step-done { background: #d1e7dd; color: #0a3622; }
+.step-active { background: #0d6efd; color: white; }
+.step-pending { background: #e9ecef; color: #6c757d; }
