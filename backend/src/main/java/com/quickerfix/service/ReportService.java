@@ -64,14 +64,15 @@ public class ReportService {
                 Report original = nearbyOpenReports.get(0);
                 original.setDuplicateCount(original.getDuplicateCount() + 1);
                 priorityService.recalculatePriority(original);
-                reportRepository.save(original);
-                
-                Report duplicate = buildReport(request, citizen, category);
-                duplicate.setMarkedAsDuplicate(true);
-                duplicate.setDuplicateOfReportId(original.getId());
-                duplicate = reportRepository.save(duplicate);
-                
-                return mapToResponse(duplicate);
+                original = reportRepository.save(original);
+
+                if (photos != null && !photos.isEmpty()) {
+                    for (MultipartFile photo : photos) {
+                        uploadAttachment(original.getId(), photo, citizenEmail, false);
+                    }
+                }
+
+                return mapToResponse(original);
             }
         }
 
@@ -123,7 +124,8 @@ public class ReportService {
     
     private List<Report> getNearbyOpenReports(Double lat, Double lng, Double radiusMeters) {
         List<ReportStatus> openStatuses = Arrays.asList(ReportStatus.REPORTED, ReportStatus.UNDER_REVIEW, 
-                ReportStatus.VERIFIED, ReportStatus.ASSIGNED, ReportStatus.IN_PROGRESS, ReportStatus.REOPENED);
+            ReportStatus.VERIFIED, ReportStatus.ASSIGNED, ReportStatus.IN_PROGRESS,
+            ReportStatus.RESOLVED, ReportStatus.CITIZEN_VERIFICATION, ReportStatus.REOPENED);
         List<Report> openReports = reportRepository.findByStatusIn(openStatuses);
         List<Report> nearby = new ArrayList<>();
         
