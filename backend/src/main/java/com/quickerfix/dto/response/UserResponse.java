@@ -15,5 +15,7 @@ public class UserResponse {
     private String phone;
     private Role role;
     private String departmentName;
+    private Long departmentId;
+    private boolean enabled;
     private LocalDateTime createdAt;
 }

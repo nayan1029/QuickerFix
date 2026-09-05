@@ -1,6 +1,8 @@
 package com.quickerfix.repository;
 
 import com.quickerfix.entity.Report;
+import com.quickerfix.entity.User;
+import com.quickerfix.entity.Category;
 import com.quickerfix.enums.ReportStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,9 +16,14 @@ import java.util.List;
 @Repository
 public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Report> findByCitizenId(Long citizenId);
+    List<Report> findByCitizen(User citizen);
     List<Report> findByStatus(ReportStatus status);
+    List<Report> findByStatusIn(List<ReportStatus> statuses);
     List<Report> findByCategoryId(Long categoryId);
     Page<Report> findAll(Pageable pageable);
+    long countByCategory(Category category);
+    List<Report> findAllByStatusNotOrderByPriorityScoreDesc(ReportStatus status);
+    long countByReportId(Long reportId);
     
     @Query("SELECT r FROM Report r WHERE " +
            "r.status NOT IN ('CLOSED') AND " +

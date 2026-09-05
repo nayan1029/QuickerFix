@@ -1,4 +1,4 @@
-package com.quickerfix.dto.response;
+"proxy": "http://localhost:8080"package com.quickerfix.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
@@ -29,3 +29,4 @@ public class ApiResponse<T> {
                 .build();
     }
 }
+
