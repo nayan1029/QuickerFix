@@ -1,4 +1,4 @@
-"proxy": "http://localhost:8080"package com.quickerfix.dto.response;
+package com.quickerfix.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
