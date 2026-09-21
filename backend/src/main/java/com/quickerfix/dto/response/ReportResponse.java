@@ -4,12 +4,16 @@ import com.quickerfix.enums.ReportStatus;
 import com.quickerfix.enums.Severity;
 import lombok.Builder;
 import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReportResponse {
     private Long id;
     private String title;
@@ -32,4 +36,7 @@ public class ReportResponse {
     private List<String> attachmentUrls;
     private Integer commentCount;
     private String assignedWorkerName;
+    private boolean markedAsDuplicate;
+    private Long duplicateOfReportId;
+    private LocalDateTime closedAt;
 }

@@ -4,11 +4,9 @@ import com.quickerfix.dto.request.LoginRequest;
 import com.quickerfix.dto.request.RegisterRequest;
 import com.quickerfix.dto.response.AuthResponse;
 import com.quickerfix.dto.response.UserResponse;
-import com.quickerfix.entity.Department;
 import com.quickerfix.entity.User;
 import com.quickerfix.enums.Role;
 import com.quickerfix.exception.ResourceNotFoundException;
-import com.quickerfix.repository.DepartmentRepository;
 import com.quickerfix.repository.UserRepository;
 import com.quickerfix.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +21,6 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -40,18 +37,13 @@ public class AuthService {
         user.setPhone(request.getPhone());
         user.setEnabled(true);
         
-        Role role = request.getRole() != null ? request.getRole() : Role.CITIZEN;
-        user.setRole(role);
-
-        if (role == Role.WORKER && request.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(request.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-            user.setDepartment(department);
-        }
+        // This is a public endpoint. Worker and administrator accounts are provisioned
+        // by an administrator, never selected by an untrusted registration request.
+        user.setRole(Role.CITIZEN);
 
         user = userRepository.save(user);
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, mapToUserResponse(user));
+        return toAuthResponse(token, user);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -63,7 +55,7 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String token = jwtService.generateToken(user);
-        return new AuthResponse(token, mapToUserResponse(user));
+        return toAuthResponse(token, user);
     }
 
     public UserResponse getCurrentUser(String email) {
@@ -78,12 +70,16 @@ public class AuthService {
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         response.setPhone(user.getPhone());
-        response.setRole(user.getRole().name());
+        response.setRole(user.getRole());
         response.setEnabled(user.isEnabled());
         if (user.getDepartment() != null) {
             response.setDepartmentId(user.getDepartment().getId());
             response.setDepartmentName(user.getDepartment().getName());
         }
         return response;
+    }
+
+    private AuthResponse toAuthResponse(String token, User user) {
+        return new AuthResponse(token, user.getId(), user.getName(), user.getEmail(), user.getRole());
     }
 }

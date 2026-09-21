@@ -5,7 +5,7 @@ import StatusBadge from '../components/StatusBadge';
 
 const WorkerPortal = () => {
   const [assignments, setAssignments] = useState([]);
-  const [stats, setStats] = useState({ pending: 0, inProgress: 0, completed: 0 });
+  const [stats, setStats] = useState({ pendingCount: 0, inProgressCount: 0, resolvedCount: 0 });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -70,19 +70,19 @@ const WorkerPortal = () => {
         <div className="col-md-4">
           <div className="card p-3 text-center bg-light">
             <h4>Pending</h4>
-            <div className="display-6">{stats.pending}</div>
+            <div className="display-6">{stats.pendingCount}</div>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card p-3 text-center bg-light">
             <h4>In Progress</h4>
-            <div className="display-6">{stats.inProgress}</div>
+            <div className="display-6">{stats.inProgressCount}</div>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card p-3 text-center bg-light">
             <h4>Completed</h4>
-            <div className="display-6">{stats.completed}</div>
+            <div className="display-6">{stats.resolvedCount}</div>
           </div>
         </div>
       </div>

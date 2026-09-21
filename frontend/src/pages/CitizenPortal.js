@@ -2,6 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
+import { useAuth } from '../context/AuthContext';
+
+const PREVIEW_CATEGORIES = [
+  { id: 1, icon: '🛣️', name: 'Potholes & Road Damage' },
+  { id: 2, icon: '💡', name: 'Streetlights & Electrical' },
+  { id: 3, icon: '🗑️', name: 'Garbage & Waste Collection' },
+  { id: 4, icon: '🚰', name: 'Water Leakage & Supply' },
+  { id: 5, icon: '🚽', name: 'Sewage & Drainage' },
+  { id: 6, icon: '🌳', name: 'Fallen Trees & Parks' },
+  { id: 7, icon: '🏗️', name: 'Damaged Public Infrastructure' },
+  { id: 8, icon: '🚦', name: 'Traffic Signals & Signs' },
+  { id: 9, icon: '🐕', name: 'Stray Animals' },
+  { id: 10, icon: '🌧️', name: 'Flooding & Waterlogging' },
+  { id: 11, icon: '🦟', name: 'Health & Sanitation' },
+  { id: 12, icon: '🔊', name: 'Noise or Public Nuisance' },
+  { id: 13, icon: '📍', name: 'Other' }
+];
 
 const CitizenPortal = () => {
   const [activeTab, setActiveTab] = useState('report');
@@ -14,13 +31,19 @@ const CitizenPortal = () => {
     title: '', description: '', categoryId: '', severity: 'LOW', address: '', lat: '', lng: ''
   });
   const [photos, setPhotos] = useState([]);
+  const [otherCategory, setOtherCategory] = useState('');
+  const { previewMode } = useAuth();
 
   useEffect(() => {
-    api.getCategories().then(res => setCategories(res.data)).catch(console.error);
+    if (previewMode) {
+      setCategories(PREVIEW_CATEGORIES);
+    } else {
+      api.getCategories().then(res => setCategories(res.data)).catch(() => setCategories(PREVIEW_CATEGORIES));
+    }
     if (activeTab === 'my') {
       api.getMyReports().then(res => setMyReports(res.data)).catch(console.error);
     }
-  }, [activeTab]);
+  }, [activeTab, previewMode]);
 
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handlePhotoChange = (e) => setPhotos(e.target.files);
@@ -33,11 +56,14 @@ const CitizenPortal = () => {
 
   const submitReport = async (e) => {
     e.preventDefault();
-    const data = new FormData();
-    Object.keys(formData).forEach(key => data.append(key, formData[key]));
-    Array.from(photos).forEach(file => data.append('photos', file));
+    if (previewMode) {
+      const category = categories.find(item => String(item.id) === String(formData.categoryId));
+      setMyReports([{ id: Date.now(), title: formData.title, description: formData.description, address: formData.address || 'Location pending', severity: formData.severity, status: 'REPORTED', priorityScore: formData.severity === 'CRITICAL' ? 30 : formData.severity === 'HIGH' ? 25 : 15, upvoteCount: 0, createdAt: new Date().toISOString(), category: { ...category, name: category?.name === 'Other' ? otherCategory || 'Other' : category?.name } }, ...myReports]);
+      setActiveTab('my');
+      return;
+    }
     try {
-      await api.createReport(data);
+      await api.createReport({ ...formData, photos });
       setActiveTab('my');
     } catch (err) {
       console.error(err);
@@ -89,6 +115,12 @@ const CitizenPortal = () => {
                 {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
+            {categories.find(category => String(category.id) === String(formData.categoryId))?.name === 'Other' && (
+              <div className="mb-3">
+                <label className="form-label">Tell us what the issue is</label>
+                <input type="text" className="form-control" value={otherCategory} onChange={(event) => setOtherCategory(event.target.value)} placeholder="Describe the category" required />
+              </div>
+            )}
             <div className="mb-3">
               <label className="form-label">Title</label>
               <input type="text" name="title" className="form-control" onChange={handleInputChange} required />

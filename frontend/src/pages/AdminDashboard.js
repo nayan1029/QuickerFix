@@ -2,22 +2,34 @@ import React, { useEffect, useState } from 'react';
 import * as api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [reports, setReports] = useState([]);
   const [users, setUsers] = useState([]);
   const [workers, setWorkers] = useState([]);
+  const { previewMode } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (previewMode) {
+      setStats({ totalReports: 1245, pendingReports: 126, inProgressReports: 84, resolvedReports: 921, resolutionRate: 74 });
+      setReports([
+        { id: 101, title: 'Water leakage on Park Road', priorityScore: 86, status: 'IN_PROGRESS', severity: 'CRITICAL' },
+        { id: 102, title: 'Broken streetlight near bus stop', priorityScore: 68, status: 'VERIFIED', severity: 'HIGH' }
+      ]);
+      setWorkers([{ id: 2, name: 'Roads Worker' }]);
+      setUsers([{ id: 1, name: 'Admin User', email: 'admin@quickerfix.com', role: 'ADMIN', enabled: true }, { id: 2, name: 'Roads Worker', email: 'worker.roads@quickerfix.com', role: 'WORKER', enabled: true }]);
+      return;
+    }
     api.getDashboard().then(res => setStats(res.data)).catch(console.error);
     api.getPriorityQueue().then(res => setReports(res.data)).catch(console.error);
     api.getAllUsers().then(res => {
       setUsers(res.data);
       setWorkers(res.data.filter(u => u.role === 'WORKER'));
     }).catch(console.error);
-  }, []);
+  }, [previewMode]);
 
   const handleAssign = async (reportId, workerId) => {
     try {
@@ -66,26 +78,26 @@ const AdminDashboard = () => {
         <div className="col-md-2 col-6 mb-3">
           <div className="card p-3 text-center">
             <h6>Pending</h6>
-            <h3 className="text-secondary">{stats.pending}</h3>
+            <h3 className="text-secondary">{stats.pendingReports}</h3>
           </div>
         </div>
         <div className="col-md-2 col-6 mb-3">
           <div className="card p-3 text-center">
             <h6>In Progress</h6>
-            <h3 className="text-info">{stats.inProgress}</h3>
+            <h3 className="text-info">{stats.inProgressReports}</h3>
           </div>
         </div>
         <div className="col-md-2 col-6 mb-3">
           <div className="card p-3 text-center">
             <h6>Resolved</h6>
-            <h3 className="text-success">{stats.resolved}</h3>
+            <h3 className="text-success">{stats.resolvedReports}</h3>
           </div>
         </div>
         <div className="col-md-4 col-12 mb-3">
           <div className="card p-3 text-center">
             <h6>Resolution Rate</h6>
             <h3 className="text-warning">
-               {stats.totalReports > 0 ? Math.round((stats.resolved / stats.totalReports) * 100) : 0}%
+               {stats.totalReports > 0 ? Math.round(stats.resolutionRate || 0) : 0}%
             </h3>
           </div>
         </div>

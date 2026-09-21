@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface RatingRepository extends JpaRepository<Rating, Long> {
     Optional<Rating> findByReportId(Long reportId);
     boolean existsByReportIdAndCitizenId(Long reportId, Long citizenId);
+    boolean existsByReportId(Long reportId);
     @Query("SELECT AVG(r.score) FROM Rating r")
     Double findAverageScore();
 }

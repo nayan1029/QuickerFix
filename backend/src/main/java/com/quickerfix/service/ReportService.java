@@ -284,7 +284,7 @@ public class ReportService {
         if (report.getStatus() != ReportStatus.CLOSED) {
             throw new IllegalStateException("Report must be closed before rating");
         }
-        if (ratingRepository.existsByReport(report)) {
+        if (ratingRepository.existsByReportId(report.getId())) {
             throw new IllegalStateException("Report already rated");
         }
         
@@ -327,8 +327,8 @@ public class ReportService {
         r.setLatitude(report.getLatitude());
         r.setLongitude(report.getLongitude());
         r.setAddress(report.getAddress());
-        r.setSeverity(report.getSeverity().name());
-        r.setStatus(report.getStatus().name());
+        r.setSeverity(report.getSeverity());
+        r.setStatus(report.getStatus());
         r.setPriorityScore(report.getPriorityScore());
         r.setUpvoteCount(report.getUpvoteCount());
         r.setDuplicateCount(report.getDuplicateCount());

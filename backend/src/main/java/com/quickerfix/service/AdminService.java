@@ -54,10 +54,10 @@ public class AdminService {
         response.setTotalReports(totalReports);
         response.setClosedReports(closedReports);
         response.setInProgressReports(inProgressReports);
-        response.setNewReports(newReports);
+        response.setPendingReports(newReports);
         response.setResolutionRate(resolutionRate);
-        response.setStatusCounts(statusCounts);
-        response.setCategoryCounts(categoryCounts);
+        response.setReportsByCategory(categoryCounts);
+        response.setHighPriorityReports(getPriorityQueue().stream().limit(10).collect(Collectors.toList()));
         
         return response;
     }
@@ -124,7 +124,7 @@ public class AdminService {
         r.setName(user.getName());
         r.setEmail(user.getEmail());
         r.setPhone(user.getPhone());
-        r.setRole(user.getRole().name());
+        r.setRole(user.getRole());
         r.setEnabled(user.isEnabled());
         if (user.getDepartment() != null) {
             r.setDepartmentId(user.getDepartment().getId());
@@ -137,11 +137,11 @@ public class AdminService {
         ReportResponse r = new ReportResponse();
         r.setId(report.getId());
         r.setTitle(report.getTitle());
-        r.setStatus(report.getStatus().name());
+        r.setStatus(report.getStatus());
         r.setPriorityScore(report.getPriorityScore());
         r.setCategoryName(report.getCategory().getName());
         r.setCitizenName(report.getCitizen().getName());
-        r.setSeverity(report.getSeverity().name());
+        r.setSeverity(report.getSeverity());
         return r;
     }
 }

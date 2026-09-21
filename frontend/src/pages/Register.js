@@ -1,22 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
-import * as api from '../services/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: '', role: 'CITIZEN', departmentId: ''
+    name: '', email: '', password: '', phone: ''
   });
-  const [departments, setDepartments] = useState([]);
   const [error, setError] = useState('');
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (formData.role === 'WORKER') {
-      api.getDepartments().then(res => setDepartments(res.data)).catch(console.error);
-    }
-  }, [formData.role]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -30,13 +23,38 @@ const Register = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      await googleLogin(credentialResponse.credential);
+      navigate('/citizen');
+    } catch (err) {
+      setError('Google sign-up failed. Please try again.');
+    }
+  };
+
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card p-4">
-            <h2 className="text-center mb-4">Register</h2>
+    <div className="auth-page">
+      <div className="auth-card card">
+            <div className="text-center mb-4"><span className="eyebrow text-primary bg-white border">Community account</span>
+            <h2 className="mt-3 mb-2">Start making a difference</h2><p className="lead mb-0">Create your citizen account to report and track local issues.</p></div>
             {error && <div className="alert alert-danger">{error}</div>}
+
+            <div className="d-flex justify-content-center mb-3">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google sign-up failed. Please try again.')}
+                text="signup_with"
+                shape="rectangular"
+                logo_alignment="left"
+                width="100%"
+              />
+            </div>
+            <div className="d-flex align-items-center mb-3">
+              <hr className="flex-grow-1" />
+              <span className="px-3 text-muted small">or register with email</span>
+              <hr className="flex-grow-1" />
+            </div>
+
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label">Name</label>
@@ -54,31 +72,14 @@ const Register = () => {
                 <label className="form-label">Phone</label>
                 <input type="text" name="phone" className="form-control" onChange={handleChange} required />
               </div>
-              <div className="mb-3">
-                <label className="form-label">Role</label>
-                <select name="role" className="form-select" onChange={handleChange} value={formData.role}>
-                  <option value="CITIZEN">Citizen</option>
-                  <option value="WORKER">Worker</option>
-                </select>
+              <div className="alert alert-light border small">
+                This form creates a citizen account. Worker and administrator accounts are issued through the municipal administration.
               </div>
-              {formData.role === 'WORKER' && (
-                <div className="mb-3">
-                  <label className="form-label">Department</label>
-                  <select name="departmentId" className="form-select" onChange={handleChange} required>
-                    <option value="">Select Department</option>
-                    {departments.map(dept => (
-                      <option key={dept.id} value={dept.id}>{dept.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              <button type="submit" className="btn btn-primary w-100">Register</button>
+              <button type="submit" className="btn btn-primary w-100">Create citizen account</button>
             </form>
             <div className="mt-3 text-center">
               Already have an account? <Link to="/login">Login</Link>
             </div>
-          </div>
-        </div>
       </div>
     </div>
   );

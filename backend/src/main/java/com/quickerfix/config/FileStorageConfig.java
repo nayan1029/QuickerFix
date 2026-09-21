@@ -30,4 +30,8 @@ public class FileStorageConfig {
     public Path getUploadPath() {
         return uploadPath;
     }
+
+    public String getUploadDir() {
+        return uploadDir;
+    }
 }

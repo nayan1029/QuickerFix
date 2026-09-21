@@ -27,7 +27,7 @@ const AppContent = () => {
   return (
     <>
       <Navbar />
-      <Routes>
+      <main className="page-shell"><Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -63,7 +63,7 @@ const AppContent = () => {
             <PriorityQueue />
           </ProtectedRoute>
         } />
-      </Routes>
+      </Routes></main>
     </>
   );
 };

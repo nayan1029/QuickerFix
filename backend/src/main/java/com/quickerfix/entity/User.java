@@ -51,6 +51,9 @@ public class User implements UserDetails {
     @Builder.Default
     private boolean enabled = true;
 
+    @Column(unique = true)
+    private String googleId;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

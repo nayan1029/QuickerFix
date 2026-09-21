@@ -64,7 +64,7 @@ public class NotificationService {
                 break;
         }
 
-        createNotification(report.getCitizen(), title, message, NotificationType.STATUS_UPDATE, report.getId());
+        createNotification(report.getCitizen(), title, message, NotificationType.STATUS_UPDATED, report.getId());
     }
 
     public List<NotificationResponse> getUserNotifications(String userEmail) {
@@ -109,7 +109,7 @@ public class NotificationService {
         response.setId(notification.getId());
         response.setTitle(notification.getTitle());
         response.setMessage(notification.getMessage());
-        response.setType(notification.getType().name());
+        response.setType(notification.getType());
         response.setRead(notification.isRead());
         response.setRelatedReportId(notification.getRelatedReportId());
         response.setCreatedAt(notification.getCreatedAt());

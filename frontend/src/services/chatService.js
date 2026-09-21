@@ -1,30 +1,17 @@
-import axios from 'axios';
-import io from 'socket.io-client';
-
-const API_BASE = '/api/chat';
-const SOCKET_URL = 'http://localhost:8080';
-
-let socket = null;
+import api from './api';
 
 export const chatService = {
   // Initialize WebSocket connection
-  initializeSocket: (userId) => {
-    socket = io(SOCKET_URL, {
-      auth: {
-        userId
-      }
-    });
-    return socket;
-  },
+  initializeSocket: () => null,
 
   // Get or disconnect socket
-  getSocket: () => socket,
+  getSocket: () => null,
 
   // Get chat messages for a report
   getMessages: async (reportId, page = 0) => {
     try {
-      const response = await axios.get(`${API_BASE}/messages/${reportId}?page=${page}`);
-      return response.data;
+      const response = await api.get(`/chat/messages/${reportId}?page=${page}`);
+      return response;
     } catch (error) {
       throw error.response?.data || error;
     }
@@ -33,12 +20,12 @@ export const chatService = {
   // Send message
   sendMessage: async (reportId, recipientId, content) => {
     try {
-      const response = await axios.post(`${API_BASE}/messages`, {
+      const response = await api.post('/chat/messages', {
         reportId,
         recipientId,
         content
       });
-      return response.data;
+      return response;
     } catch (error) {
       throw error.response?.data || error;
     }
@@ -47,7 +34,7 @@ export const chatService = {
   // Mark message as read
   markAsRead: async (messageId) => {
     try {
-      const response = await axios.patch(`${API_BASE}/messages/${messageId}/read`);
+      const response = await api.patch(`/chat/messages/${messageId}/read`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -57,7 +44,7 @@ export const chatService = {
   // Get unread count
   getUnreadCount: async () => {
     try {
-      const response = await axios.get(`${API_BASE}/unread-count`);
+      const response = await api.get('/chat/unread-count');
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -67,7 +54,7 @@ export const chatService = {
   // Mark all messages read in a chat room
   markAllAsRead: async (reportId) => {
     try {
-      const response = await axios.patch(`${API_BASE}/room/${reportId}/read-all`);
+      const response = await api.patch(`/chat/room/${reportId}/read-all`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

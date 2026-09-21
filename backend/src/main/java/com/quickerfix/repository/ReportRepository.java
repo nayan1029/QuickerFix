@@ -23,7 +23,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Page<Report> findAll(Pageable pageable);
     long countByCategory(Category category);
     List<Report> findAllByStatusNotOrderByPriorityScoreDesc(ReportStatus status);
-    long countByReportId(Long reportId);
     
     @Query("SELECT r FROM Report r WHERE " +
            "r.status NOT IN ('CLOSED') AND " +

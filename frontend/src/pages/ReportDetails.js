@@ -68,7 +68,7 @@ const ReportDetails = () => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     try {
-      await api.addComment(id, { text: newComment });
+      await api.addComment(id, { content: newComment });
       setNewComment('');
       fetchComments();
     } catch (err) {
