@@ -1,8 +1,20 @@
 import axios from 'axios';
 
+const rawBaseURL = process.env.REACT_APP_API_URL || '/api';
+const baseURL = rawBaseURL.endsWith('/api')
+  ? rawBaseURL
+  : (rawBaseURL.endsWith('/') ? `${rawBaseURL}api` : (rawBaseURL === '/api' ? '/api' : `${rawBaseURL}/api`));
+
 const api = axios.create({
-  baseURL: '/api'
+  baseURL
 });
+
+export const getMediaUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const base = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '') : '';
+  return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+};
 
 api.interceptors.request.use(
   (config) => {
