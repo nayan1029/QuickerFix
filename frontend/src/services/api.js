@@ -71,9 +71,13 @@ export const rateReport = (id, data) => api.post(`/reports/${id}/rate`, data);
 
 // Admin
 export const getDashboard = () => api.get('/admin/dashboard');
-export const getPriorityQueue = () => api.get('/admin/reports/priority');
+export const getPriorityQueue = (params = {}) => {
+  const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== '' && value != null)).toString();
+  return api.get(`/admin/reports/priority${query ? `?${query}` : ''}`);
+};
 export const assignWorker = (reportId, data) => api.post(`/admin/reports/${reportId}/assign`, data);
 export const getAllUsers = () => api.get('/admin/users');
+export const createWorker = (data) => api.post('/admin/users/workers', data);
 export const toggleUser = (userId) => api.patch(`/admin/users/${userId}/toggle`);
 export const getAdminReports = (status) => api.get(`/admin/reports${status ? '?status=' + status : ''}`);
 export const deleteReport = (id) => api.delete(`/admin/reports/${id}`);

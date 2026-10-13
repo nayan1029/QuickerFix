@@ -1,6 +1,7 @@
 package com.quickerfix.controller;
 
 import com.quickerfix.dto.response.ApiResponse;
+import com.quickerfix.dto.response.AssignmentResponse;
 import com.quickerfix.dto.response.ReportResponse;
 import com.quickerfix.entity.Assignment;
 import com.quickerfix.service.AssignmentService;
@@ -25,42 +26,44 @@ public class WorkerController {
     private final AssignmentService assignmentService;
 
     @GetMapping("/assignments")
-    public ResponseEntity<ApiResponse<List<Assignment>>> getMyAssignments() {
+    public ResponseEntity<ApiResponse<List<AssignmentResponse>>> getMyAssignments() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<Assignment> assignments = workerService.getMyAssignments(email);
+        List<AssignmentResponse> assignments = workerService.getMyAssignments(email).stream()
+                .map(assignmentService::toResponse).toList();
         return ResponseEntity.ok(new ApiResponse<>(true, "Assignments fetched", assignments));
     }
 
     @GetMapping("/assignments/{id}")
-    public ResponseEntity<ApiResponse<Assignment>> getAssignmentById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<AssignmentResponse>> getAssignmentById(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Assignment assignment = workerService.getAssignmentById(id, email);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Assignment fetched", assignment));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Assignment fetched", assignmentService.toResponse(assignment)));
     }
 
     @PutMapping("/assignments/{id}/accept")
-    public ResponseEntity<ApiResponse<Assignment>> acceptAssignment(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<AssignmentResponse>> acceptAssignment(@PathVariable Long id) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Assignment assignment = assignmentService.acceptAssignment(id, email);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Assignment accepted", assignment));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Assignment accepted", assignmentService.toResponse(assignment)));
     }
 
     @PutMapping("/assignments/{id}/reject")
-    public ResponseEntity<ApiResponse<Assignment>> rejectAssignment(
+    public ResponseEntity<ApiResponse<AssignmentResponse>> rejectAssignment(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         String reason = body.getOrDefault("reason", "No reason provided");
         Assignment assignment = assignmentService.rejectAssignment(id, reason, email);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Assignment rejected", assignment));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Assignment rejected", assignmentService.toResponse(assignment)));
     }
 
     @PostMapping("/reports/{reportId}/resolve")
     public ResponseEntity<ApiResponse<ReportResponse>> resolveReport(
             @PathVariable Long reportId,
-            @RequestParam("photo") MultipartFile proofPhoto) {
+            @RequestParam("photo") MultipartFile proofPhoto,
+            @RequestParam(value = "remarks", required = false) String remarks) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        ReportResponse report = assignmentService.resolveReport(reportId, proofPhoto, email);
+        ReportResponse report = assignmentService.resolveReport(reportId, proofPhoto, email, remarks);
         return ResponseEntity.ok(new ApiResponse<>(true, "Report resolved", report));
     }
 

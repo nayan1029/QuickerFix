@@ -2,8 +2,10 @@ package com.quickerfix.service;
 
 import com.quickerfix.dto.request.AssignRequest;
 import com.quickerfix.dto.response.ReportResponse;
+import com.quickerfix.dto.response.AssignmentResponse;
 import com.quickerfix.entity.Assignment;
 import com.quickerfix.entity.Report;
+import com.quickerfix.entity.StatusHistory;
 import com.quickerfix.entity.User;
 import com.quickerfix.enums.AssignmentStatus;
 import com.quickerfix.enums.ReportStatus;
@@ -13,6 +15,7 @@ import com.quickerfix.exception.ResourceNotFoundException;
 import com.quickerfix.exception.UnauthorizedException;
 import com.quickerfix.repository.AssignmentRepository;
 import com.quickerfix.repository.ReportRepository;
+import com.quickerfix.repository.StatusHistoryRepository;
 import com.quickerfix.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,9 +31,19 @@ public class AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
     private final ReportRepository reportRepository;
+    private final StatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final ReportService reportService;
+
+    public AssignmentResponse toResponse(Assignment assignment) {
+        Report report = assignment.getReport();
+        return new AssignmentResponse(assignment.getId(), assignment.getStatus(),
+                new AssignmentResponse.ReportSummary(report.getId(), report.getTitle(), report.getAddress(),
+                        report.getSeverity(), report.getStatus(), report.getCategory().getName()),
+                assignment.getAssignedAt(), assignment.getAcceptedAt(), assignment.getCompletedAt(),
+                assignment.getRejectionReason());
+    }
 
     @Transactional
     public Assignment assignWorker(Long reportId, AssignRequest request, String adminEmail) {
@@ -47,6 +60,14 @@ public class AssignmentService {
         if (worker.getRole() != Role.WORKER) {
             throw new IllegalArgumentException("User is not a worker");
         }
+        if (worker.getDepartment() == null || report.getCategory().getDepartment() == null
+                || !worker.getDepartment().getId().equals(report.getCategory().getDepartment().getId())) {
+            throw new InvalidStatusTransitionException("Worker must belong to the report category department");
+        }
+        if (assignmentRepository.findByReportIdAndStatus(reportId, AssignmentStatus.PENDING).isPresent()
+                || assignmentRepository.findByReportIdAndStatus(reportId, AssignmentStatus.ACCEPTED).isPresent()) {
+            throw new InvalidStatusTransitionException("Report already has an active assignment");
+        }
 
         Assignment assignment = new Assignment();
         assignment.setReport(report);
@@ -55,8 +76,10 @@ public class AssignmentService {
         assignment.setStatus(AssignmentStatus.PENDING);
         assignment = assignmentRepository.save(assignment);
 
+        ReportStatus oldStatus = report.getStatus();
         report.setStatus(ReportStatus.ASSIGNED);
         reportRepository.save(report);
+        recordStatusChange(report, oldStatus, ReportStatus.ASSIGNED, admin, "Assigned to " + worker.getName());
 
         notificationService.notifyStatusChange(report, ReportStatus.ASSIGNED);
         
@@ -71,14 +94,19 @@ public class AssignmentService {
         if (!assignment.getWorker().getEmail().equals(workerEmail)) {
             throw new UnauthorizedException("Not your assignment");
         }
+        if (assignment.getStatus() != AssignmentStatus.PENDING) {
+            throw new InvalidStatusTransitionException("Only pending assignments can be accepted");
+        }
 
+        Report report = assignment.getReport();
+        ReportStatus oldStatus = report.getStatus();
         assignment.setStatus(AssignmentStatus.ACCEPTED);
         assignment.setAcceptedAt(LocalDateTime.now());
         assignment = assignmentRepository.save(assignment);
 
-        Report report = assignment.getReport();
         report.setStatus(ReportStatus.IN_PROGRESS);
         reportRepository.save(report);
+        recordStatusChange(report, oldStatus, ReportStatus.IN_PROGRESS, assignment.getWorker(), "Assignment accepted");
 
         notificationService.notifyStatusChange(report, ReportStatus.IN_PROGRESS);
         return assignment;
@@ -92,14 +120,20 @@ public class AssignmentService {
         if (!assignment.getWorker().getEmail().equals(workerEmail)) {
             throw new UnauthorizedException("Not your assignment");
         }
+        if (assignment.getStatus() != AssignmentStatus.PENDING) {
+            throw new InvalidStatusTransitionException("Only pending assignments can be rejected");
+        }
 
+        Report report = assignment.getReport();
+        ReportStatus oldStatus = report.getStatus();
         assignment.setStatus(AssignmentStatus.REJECTED);
         assignment.setRejectionReason(reason);
         assignment = assignmentRepository.save(assignment);
 
-        Report report = assignment.getReport();
         report.setStatus(ReportStatus.VERIFIED);
         reportRepository.save(report);
+        recordStatusChange(report, oldStatus, ReportStatus.VERIFIED, assignment.getWorker(),
+                "Assignment rejected: " + reason);
 
         // Notify admin in a real app, skipping explicit method here since we notify by report
         return assignment;
@@ -112,7 +146,7 @@ public class AssignmentService {
     }
 
     @Transactional
-    public ReportResponse resolveReport(Long reportId, MultipartFile proofPhoto, String workerEmail) {
+    public ReportResponse resolveReport(Long reportId, MultipartFile proofPhoto, String workerEmail, String remarks) {
         User worker = userRepository.findByEmail(workerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Worker not found"));
         Report report = reportRepository.findById(reportId)
@@ -121,7 +155,7 @@ public class AssignmentService {
         Assignment assignment = assignmentRepository.findByReportAndWorker(report, worker)
                 .orElseThrow(() -> new UnauthorizedException("You are not assigned to this report"));
 
-        if (assignment.getStatus() != AssignmentStatus.ACCEPTED) {
+        if (assignment.getStatus() != AssignmentStatus.ACCEPTED || report.getStatus() != ReportStatus.IN_PROGRESS) {
             throw new IllegalStateException("You must accept the assignment before resolving");
         }
 
@@ -129,6 +163,7 @@ public class AssignmentService {
             reportService.uploadAttachment(reportId, proofPhoto, workerEmail, true);
         }
 
+        ReportStatus oldStatus = report.getStatus();
         assignment.setStatus(AssignmentStatus.COMPLETED);
         assignment.setCompletedAt(LocalDateTime.now());
         assignmentRepository.save(assignment);
@@ -136,9 +171,25 @@ public class AssignmentService {
         report.setStatus(ReportStatus.CITIZEN_VERIFICATION);
         report.setResolvedAt(LocalDateTime.now());
         reportRepository.save(report);
+        String resolutionRemark = remarks == null || remarks.isBlank()
+                ? "Resolution submitted for citizen verification"
+                : "Resolution submitted: " + remarks.trim();
+        recordStatusChange(report, oldStatus, ReportStatus.CITIZEN_VERIFICATION, worker, resolutionRemark);
 
-        notificationService.notifyStatusChange(report, ReportStatus.RESOLVED);
+        notificationService.notifyStatusChange(report, ReportStatus.CITIZEN_VERIFICATION);
         
         return reportService.getReportById(reportId);
+    }
+
+    private void recordStatusChange(Report report, ReportStatus oldStatus, ReportStatus newStatus,
+                                    User actor, String remark) {
+        StatusHistory history = new StatusHistory();
+        history.setReport(report);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(newStatus);
+        history.setChangedBy(actor);
+        history.setRemark(remark);
+        history.setChangedAt(LocalDateTime.now());
+        statusHistoryRepository.save(history);
     }
 }

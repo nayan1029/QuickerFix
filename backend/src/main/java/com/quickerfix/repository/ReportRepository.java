@@ -23,6 +23,20 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Page<Report> findAll(Pageable pageable);
     long countByCategory(Category category);
     List<Report> findAllByStatusNotOrderByPriorityScoreDesc(ReportStatus status);
+    List<Report> findTop10ByStatusNotOrderByPriorityScoreDesc(ReportStatus status);
+
+    @Query("select r from Report r where " +
+            "(:includeClosed = true or r.status <> :closedStatus) and " +
+            "(:status is null or r.status = :status) and " +
+            "(:categoryId is null or r.category.id = :categoryId) and " +
+            "(:query is null or lower(r.title) like concat('%', lower(:query), '%') or " +
+            "lower(coalesce(r.address, '')) like concat('%', lower(:query), '%'))")
+    Page<Report> searchQueue(@Param("includeClosed") boolean includeClosed,
+                             @Param("closedStatus") ReportStatus closedStatus,
+                             @Param("status") ReportStatus status,
+                             @Param("categoryId") Long categoryId,
+                             @Param("query") String query,
+                             Pageable pageable);
     
     @Query("SELECT r FROM Report r WHERE " +
            "r.status NOT IN ('CLOSED') AND " +

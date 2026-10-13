@@ -1,197 +1,149 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
-import { useAuth } from '../context/AuthContext';
-
-const PREVIEW_CATEGORIES = [
-  { id: 1, icon: '🛣️', name: 'Potholes & Road Damage' },
-  { id: 2, icon: '💡', name: 'Streetlights & Electrical' },
-  { id: 3, icon: '🗑️', name: 'Garbage & Waste Collection' },
-  { id: 4, icon: '🚰', name: 'Water Leakage & Supply' },
-  { id: 5, icon: '🚽', name: 'Sewage & Drainage' },
-  { id: 6, icon: '🌳', name: 'Fallen Trees & Parks' },
-  { id: 7, icon: '🏗️', name: 'Damaged Public Infrastructure' },
-  { id: 8, icon: '🚦', name: 'Traffic Signals & Signs' },
-  { id: 9, icon: '🐕', name: 'Stray Animals' },
-  { id: 10, icon: '🌧️', name: 'Flooding & Waterlogging' },
-  { id: 11, icon: '🦟', name: 'Health & Sanitation' },
-  { id: 12, icon: '🔊', name: 'Noise or Public Nuisance' },
-  { id: 13, icon: '📍', name: 'Other' }
-];
 
 const CitizenPortal = () => {
   const [activeTab, setActiveTab] = useState('report');
   const [categories, setCategories] = useState([]);
   const [myReports, setMyReports] = useState([]);
   const [nearbyReports, setNearbyReports] = useState([]);
+  const [formData, setFormData] = useState({ title: '', description: '', categoryId: '', severity: 'MEDIUM', address: '', lat: '', lng: '' });
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    title: '', description: '', categoryId: '', severity: 'LOW', address: '', lat: '', lng: ''
-  });
-  const [photos, setPhotos] = useState([]);
-  const [otherCategory, setOtherCategory] = useState('');
-  const { previewMode } = useAuth();
+  const loadMyReports = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await api.getMyReports();
+      setMyReports(response.data || []);
+      setError('');
+    } catch (requestError) {
+      setError('Could not load your reports. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (previewMode) {
-      setCategories(PREVIEW_CATEGORIES);
-    } else {
-      api.getCategories().then(res => setCategories(res.data)).catch(() => setCategories(PREVIEW_CATEGORIES));
-    }
-    if (activeTab === 'my') {
-      api.getMyReports().then(res => setMyReports(res.data)).catch(console.error);
-    }
-  }, [activeTab, previewMode]);
+    api.getCategories()
+      .then(response => setCategories(response.data || []))
+      .catch(() => setError('Could not load issue categories. Please refresh and try again.'));
+  }, []);
 
-  const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  const handlePhotoChange = (e) => setPhotos(e.target.files);
+  useEffect(() => {
+    if (activeTab === 'my') loadMyReports();
+  }, [activeTab, loadMyReports]);
 
-  const getLocation = () => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setFormData({ ...formData, lat: pos.coords.latitude, lng: pos.coords.longitude, address: `Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}` });
-    }, console.error);
-  };
+  const changeField = (event) => setFormData(current => ({ ...current, [event.target.name]: event.target.value }));
 
-  const submitReport = async (e) => {
-    e.preventDefault();
-    if (previewMode) {
-      const category = categories.find(item => String(item.id) === String(formData.categoryId));
-      setMyReports([{ id: Date.now(), title: formData.title, description: formData.description, address: formData.address || 'Location pending', severity: formData.severity, status: 'REPORTED', priorityScore: formData.severity === 'CRITICAL' ? 30 : formData.severity === 'HIGH' ? 25 : 15, upvoteCount: 0, createdAt: new Date().toISOString(), category: { ...category, name: category?.name === 'Other' ? otherCategory || 'Other' : category?.name } }, ...myReports]);
-      setActiveTab('my');
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError('Location services are not available in this browser. Enter the address manually.');
       return;
     }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setFormData(current => ({
+        ...current,
+        lat: coords.latitude,
+        lng: coords.longitude,
+        address: current.address || `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
+      })),
+      () => setError('Could not read your location. Check browser permissions or enter it manually.')
+    );
+  };
+
+  const submitReport = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
     try {
       await api.createReport({ ...formData, photos });
+      setFormData({ title: '', description: '', categoryId: '', severity: 'MEDIUM', address: '', lat: '', lng: '' });
+      setPhotos([]);
       setActiveTab('my');
-    } catch (err) {
-      console.error(err);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Report could not be submitted. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getNearby = () => {
-    navigator.geolocation.getCurrentPosition(async (pos) => {
+  const findNearby = () => {
+    if (!navigator.geolocation) {
+      setError('Location services are not available in this browser.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       try {
-        const res = await api.getNearbyReports(pos.coords.latitude, pos.coords.longitude, 10);
-        setNearbyReports(res.data);
-      } catch (err) {
-        console.error(err);
+        const response = await api.getNearbyReports(coords.latitude, coords.longitude, 500);
+        setNearbyReports(response.data || []);
+      } catch (requestError) {
+        setError('Nearby reports could not be loaded. Please try again.');
+      } finally {
+        setLoading(false);
       }
-    }, console.error);
+    }, () => {
+      setLoading(false);
+      setError('Could not read your location. Check browser permissions and try again.');
+    });
   };
 
-  const handleUpvote = async (id) => {
+  const upvote = async (reportId) => {
     try {
-      await api.upvoteReport(id);
-      getNearby();
-    } catch (err) {
-      console.error(err);
+      await api.upvoteReport(reportId);
+      findNearby();
+    } catch (requestError) {
+      setError('Your vote could not be saved. Please try again.');
     }
   };
 
   return (
-    <div className="container mt-4">
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')}>Report a Problem</button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === 'my' ? 'active' : ''}`} onClick={() => setActiveTab('my')}>My Complaints</button>
-        </li>
-        <li className="nav-item">
-          <button className={`nav-link ${activeTab === 'nearby' ? 'active' : ''}`} onClick={() => setActiveTab('nearby')}>Nearby Issues</button>
-        </li>
+    <div className="container py-4">
+      <div className="mb-4">
+        <span className="eyebrow text-primary bg-white border">Citizen workspace</span>
+        <h1 className="mt-3">Report and follow local issues</h1>
+        <p className="text-muted">Share a clear description and location so the right team can respond.</p>
+      </div>
+      <ul className="nav nav-tabs mb-4" role="tablist">
+        <li className="nav-item"><button className={`nav-link ${activeTab === 'report' ? 'active' : ''}`} onClick={() => setActiveTab('report')}>New report</button></li>
+        <li className="nav-item"><button className={`nav-link ${activeTab === 'my' ? 'active' : ''}`} onClick={() => setActiveTab('my')}>My reports</button></li>
+        <li className="nav-item"><button className={`nav-link ${activeTab === 'nearby' ? 'active' : ''}`} onClick={() => setActiveTab('nearby')}>Nearby reports</button></li>
       </ul>
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
 
-      {activeTab === 'report' && (
-        <div className="card p-4">
-          <h2>Report a Problem</h2>
-          <form onSubmit={submitReport}>
-            <div className="mb-3">
-              <label className="form-label">Category</label>
-              <select name="categoryId" className="form-select" onChange={handleInputChange} required>
-                <option value="">Select Category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-              </select>
-            </div>
-            {categories.find(category => String(category.id) === String(formData.categoryId))?.name === 'Other' && (
-              <div className="mb-3">
-                <label className="form-label">Tell us what the issue is</label>
-                <input type="text" className="form-control" value={otherCategory} onChange={(event) => setOtherCategory(event.target.value)} placeholder="Describe the category" required />
-              </div>
-            )}
-            <div className="mb-3">
-              <label className="form-label">Title</label>
-              <input type="text" name="title" className="form-control" onChange={handleInputChange} required />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Description</label>
-              <textarea name="description" className="form-control" rows="3" onChange={handleInputChange} required></textarea>
-            </div>
-            <div className="mb-3">
-              <label className="form-label d-block">Severity</label>
-              <div className="btn-group w-100">
-                {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(sev => (
-                  <React.Fragment key={sev}>
-                    <input type="radio" className="btn-check" name="severity" id={sev} value={sev} checked={formData.severity === sev} onChange={handleInputChange} />
-                    <label className="btn btn-outline-primary" htmlFor={sev}>{sev}</label>
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Location</label>
-              <div className="input-group">
-                <input type="text" name="address" className="form-control" value={formData.address} onChange={handleInputChange} required />
-                <button type="button" className="btn btn-secondary" onClick={getLocation}>📍 Use My Location</button>
-              </div>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Photos</label>
-              <input type="file" className="form-control" multiple onChange={handlePhotoChange} />
-            </div>
-            <button type="submit" className="btn btn-success">Submit Report</button>
-          </form>
-        </div>
-      )}
-
-      {activeTab === 'my' && (
-        <div className="row">
-          {myReports.map(report => (
-            <div key={report.id} className="col-md-6 mb-3">
-              <div className="card p-3 cursor-pointer" onClick={() => navigate(`/reports/${report.id}`)} style={{ cursor: 'pointer' }}>
-                <h5>{report.category?.icon} {report.title}</h5>
-                <p className="text-muted">{new Date(report.createdAt).toLocaleDateString()}</p>
-                <div>
-                  <StatusBadge status={report.status} />
-                  <span className="badge bg-secondary ms-2">Priority: {report.priorityScore}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {activeTab === 'nearby' && (
-        <div>
-          <button className="btn btn-primary mb-4" onClick={getNearby}>🗺️ Find Nearby Issues</button>
-          <div className="row">
-            {nearbyReports.map(report => (
-              <div key={report.id} className="col-md-6 mb-3">
-                <div className="card p-3">
-                  <h5 style={{ cursor: 'pointer' }} onClick={() => navigate(`/reports/${report.id}`)}>{report.category?.icon} {report.title}</h5>
-                  <p>{report.address}</p>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <StatusBadge status={report.status} />
-                    <button className="btn btn-sm btn-outline-primary" onClick={() => handleUpvote(report.id)}>👍 Upvote ({report.upvoteCount})</button>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {activeTab === 'report' && <div className="card p-4">
+        <h2 className="h4 mb-3">Describe the issue</h2>
+        <form onSubmit={submitReport}>
+          <div className="mb-3"><label className="form-label" htmlFor="categoryId">Category</label>
+            <select id="categoryId" name="categoryId" className="form-select" value={formData.categoryId} onChange={changeField} required>
+              <option value="">Choose a category</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+            </select>
           </div>
-        </div>
-      )}
+          <div className="mb-3"><label className="form-label" htmlFor="title">Title</label><input id="title" name="title" className="form-control" value={formData.title} onChange={changeField} maxLength="160" required /></div>
+          <div className="mb-3"><label className="form-label" htmlFor="description">Description</label><textarea id="description" name="description" className="form-control" rows="4" value={formData.description} onChange={changeField} required /></div>
+          <fieldset className="mb-3"><legend className="form-label">Severity</legend><div className="btn-group w-100">
+            {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map(severity => <React.Fragment key={severity}><input type="radio" className="btn-check" name="severity" id={`severity-${severity}`} value={severity} checked={formData.severity === severity} onChange={changeField} /><label className="btn btn-outline-primary" htmlFor={`severity-${severity}`}>{severity}</label></React.Fragment>)}
+          </div></fieldset>
+          <div className="mb-3"><label className="form-label" htmlFor="address">Location</label><div className="input-group"><input id="address" name="address" className="form-control" value={formData.address} onChange={changeField} required /><button type="button" className="btn btn-outline-secondary" onClick={useCurrentLocation}>Use my location</button></div></div>
+          <div className="mb-3"><label className="form-label" htmlFor="photos">Photos (up to 10 MB each)</label><input id="photos" type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="form-control" multiple onChange={event => setPhotos(Array.from(event.target.files || []))} /></div>
+          <button type="submit" className="btn btn-primary" disabled={loading || categories.length === 0}>{loading ? 'Submitting…' : 'Submit report'}</button>
+        </form>
+      </div>}
+
+      {activeTab === 'my' && <section aria-live="polite">
+        {loading ? <p>Loading your reports…</p> : myReports.length === 0 ? <div className="empty-state"><h2 className="h5">No reports yet</h2><p>Your submitted issues will appear here with their latest status.</p><button className="btn btn-primary" onClick={() => setActiveTab('report')}>Create a report</button></div> :
+          <div className="row g-3">{myReports.map(report => <div key={report.id} className="col-md-6"><button type="button" className="card p-3 h-100 w-100 text-start" onClick={() => navigate(`/reports/${report.id}`)}><span className="text-muted">{report.categoryName}</span><strong className="my-2">{report.title}</strong><span><StatusBadge status={report.status} /> <span className="badge bg-secondary ms-2">Priority {report.priorityScore}</span></span></button></div>)}</div>}
+      </section>}
+
+      {activeTab === 'nearby' && <section>
+        <button className="btn btn-primary mb-3" onClick={findNearby} disabled={loading}>{loading ? 'Finding reports…' : 'Find reports within 500 m'}</button>
+        {nearbyReports.length === 0 ? <p className="text-muted">Use your location to find active reports in your area.</p> : <div className="row g-3">{nearbyReports.map(report => <div key={report.id} className="col-md-6"><div className="card p-3 h-100"><button className="btn btn-link text-start p-0" onClick={() => navigate(`/reports/${report.id}`)}><strong>{report.title}</strong></button><p className="text-muted mt-2">{report.address}</p><div className="d-flex justify-content-between align-items-center"><StatusBadge status={report.status} /><button className="btn btn-sm btn-outline-primary" onClick={() => upvote(report.id)}>Upvote ({report.upvoteCount})</button></div></div></div>)}</div>}
+      </section>}
     </div>
   );
 };

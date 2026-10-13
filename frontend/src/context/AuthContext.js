@@ -1,115 +1,58 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as api from '../services/api';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('qf_token'));
-  const [previewMode, setPreviewMode] = useState(localStorage.getItem('qf_preview_mode') === 'true');
+  const [token, setToken] = useState(() => localStorage.getItem('qf_token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMe = async () => {
-      if (token && !previewMode) {
-        try {
-          const res = await api.getMe();
-          setUser(res.data);
-        } catch (error) {
-          console.error("Failed to fetch user", error);
-          logout();
-        }
+    let active = true;
+    const fetchCurrentUser = async () => {
+      if (!token) {
+        if (active) setLoading(false);
+        return;
       }
-      setLoading(false);
+      try {
+        const response = await api.getMe();
+        if (active) setUser(response.data);
+      } catch (error) {
+        localStorage.removeItem('qf_token');
+        if (active) {
+          setToken(null);
+          setUser(null);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
     };
-    fetchMe();
-  }, [token, previewMode]);
+    fetchCurrentUser();
+    return () => { active = false; };
+  }, [token]);
 
-  useEffect(() => {
-    if (previewMode) {
-      const savedUser = localStorage.getItem('qf_preview_user');
-      if (savedUser) setUser(JSON.parse(savedUser));
-      setLoading(false);
-    }
-  }, [previewMode]);
-
-  const login = async (email, password) => {
-    const res = await api.login({ email, password });
-    const { token, user: nestedUser, ...authUser } = res.data;
+  const saveAuth = (response) => {
+    const { token: accessToken, user: nestedUser, ...authUser } = response;
     const userData = nestedUser || { ...authUser, id: authUser.userId };
-    localStorage.setItem('qf_token', token);
-    localStorage.removeItem('qf_preview_mode');
-    localStorage.removeItem('qf_preview_user');
-    setPreviewMode(false);
-    setToken(token);
-    setUser(userData);
-  };
-
-  const googleLogin = async (idToken) => {
-    const res = await api.googleLogin(idToken);
-    const { token, user: nestedUser, ...authUser } = res.data;
-    const userData = nestedUser || { ...authUser, id: authUser.userId };
-    localStorage.setItem('qf_token', token);
-    localStorage.removeItem('qf_preview_mode');
-    localStorage.removeItem('qf_preview_user');
-    setPreviewMode(false);
-    setToken(token);
+    localStorage.setItem('qf_token', accessToken);
+    setToken(accessToken);
     setUser(userData);
     return userData;
   };
 
-  const register = async (data) => {
-    const res = await api.register(data);
-    const { token, user: nestedUser, ...authUser } = res.data;
-    const userData = nestedUser || { ...authUser, id: authUser.userId };
-    localStorage.setItem('qf_token', token);
-    localStorage.removeItem('qf_preview_mode');
-    localStorage.removeItem('qf_preview_user');
-    setPreviewMode(false);
-    setToken(token);
-    setUser(userData);
-  };
+  const login = async (email, password) => saveAuth((await api.login({ email, password })).data);
+  const register = async (data) => saveAuth((await api.register(data)).data);
+  const googleLogin = async (idToken) => saveAuth((await api.googleLogin(idToken)).data);
 
   const logout = () => {
     localStorage.removeItem('qf_token');
-    localStorage.removeItem('qf_preview_mode');
-    localStorage.removeItem('qf_preview_user');
     setToken(null);
     setUser(null);
-    setPreviewMode(false);
-  };
-
-  const demoLogin = async (role) => {
-    let email, password;
-    if (role === 'ADMIN') {
-      email = 'admin@quickerfix.com';
-      password = 'admin123';
-    } else if (role === 'WORKER') {
-      email = 'worker.roads@quickerfix.com';
-      password = 'worker123';
-    } else {
-      email = 'citizen@quickerfix.com';
-      password = 'citizen123';
-    }
-    try {
-      await login(email, password);
-    } catch (error) {
-      const previewUser = {
-        id: role === 'ADMIN' ? 1 : role === 'WORKER' ? 2 : 3,
-        name: role === 'ADMIN' ? 'Admin User' : role === 'WORKER' ? 'Roads Worker' : 'Demo Citizen',
-        email,
-        role
-      };
-      localStorage.setItem('qf_preview_mode', 'true');
-      localStorage.setItem('qf_preview_user', JSON.stringify(previewUser));
-      setToken(null);
-      setUser(previewUser);
-      setPreviewMode(true);
-    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, previewMode, login, googleLogin, register, logout, demoLogin }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

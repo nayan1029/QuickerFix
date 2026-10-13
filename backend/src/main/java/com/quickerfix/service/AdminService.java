@@ -7,6 +7,7 @@ import com.quickerfix.entity.Category;
 import com.quickerfix.entity.Department;
 import com.quickerfix.entity.Report;
 import com.quickerfix.entity.User;
+import com.quickerfix.dto.request.CreateWorkerRequest;
 import com.quickerfix.enums.ReportStatus;
 import com.quickerfix.exception.ResourceNotFoundException;
 import com.quickerfix.repository.CategoryRepository;
@@ -15,6 +16,11 @@ import com.quickerfix.repository.ReportRepository;
 import com.quickerfix.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +35,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public DashboardResponse getDashboard() {
         DashboardResponse response = new DashboardResponse();
@@ -57,16 +64,26 @@ public class AdminService {
         response.setPendingReports(newReports);
         response.setResolutionRate(resolutionRate);
         response.setReportsByCategory(categoryCounts);
-        response.setHighPriorityReports(getPriorityQueue().stream().limit(10).collect(Collectors.toList()));
+        response.setResolvedReports(closedReports);
+        response.setHighPriorityReports(reportRepository.findTop10ByStatusNotOrderByPriorityScoreDesc(ReportStatus.CLOSED)
+                .stream().map(this::mapToReportResponse).toList());
         
         return response;
     }
 
     public List<ReportResponse> getPriorityQueue() {
-        return reportRepository.findAllByStatusNotOrderByPriorityScoreDesc(ReportStatus.CLOSED)
+        return reportRepository.findTop10ByStatusNotOrderByPriorityScoreDesc(ReportStatus.CLOSED)
                 .stream()
                 .map(this::mapToReportResponse)
                 .collect(Collectors.toList());
+    }
+
+    public Page<ReportResponse> getPriorityQueue(int page, int size, ReportStatus status, Long categoryId,
+                                                  String query, boolean includeClosed) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("priorityScore"), Sort.Order.desc("createdAt")));
+        String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
+        return reportRepository.searchQueue(includeClosed, ReportStatus.CLOSED, status, categoryId, normalizedQuery, pageable)
+                .map(this::mapToReportResponse);
     }
 
     public List<UserResponse> getAllUsers() {
@@ -78,6 +95,23 @@ public class AdminService {
     public UserResponse getUserById(Long id) {
         return mapToUserResponse(userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found")));
+    }
+
+    public UserResponse createWorker(CreateWorkerRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email is already in use");
+        }
+        Department department = departmentRepository.findById(request.getDepartmentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+        User worker = new User();
+        worker.setName(request.getName().trim());
+        worker.setEmail(email);
+        worker.setPassword(passwordEncoder.encode(request.getPassword()));
+        worker.setRole(com.quickerfix.enums.Role.WORKER);
+        worker.setDepartment(department);
+        worker.setEnabled(true);
+        return mapToUserResponse(userRepository.save(worker));
     }
 
     public void toggleUserEnabled(Long userId) {
@@ -140,8 +174,13 @@ public class AdminService {
         r.setStatus(report.getStatus());
         r.setPriorityScore(report.getPriorityScore());
         r.setCategoryName(report.getCategory().getName());
+        r.setCategoryIcon(report.getCategory().getIcon());
+        r.setCategoryDepartmentId(report.getCategory().getDepartment() == null ? null : report.getCategory().getDepartment().getId());
+        r.setAddress(report.getAddress());
         r.setCitizenName(report.getCitizen().getName());
         r.setSeverity(report.getSeverity());
+        r.setCreatedAt(report.getCreatedAt());
+        r.setUpdatedAt(report.getUpdatedAt());
         return r;
     }
 }

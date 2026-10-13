@@ -10,6 +10,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const googleEnabled = Boolean(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -39,7 +40,7 @@ const Register = () => {
             <h2 className="mt-3 mb-2">Start making a difference</h2><p className="lead mb-0">Create your citizen account to report and track local issues.</p></div>
             {error && <div className="alert alert-danger">{error}</div>}
 
-            <div className="d-flex justify-content-center mb-3">
+            {googleEnabled && <div className="d-flex justify-content-center mb-3">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => setError('Google sign-up failed. Please try again.')}
@@ -48,12 +49,12 @@ const Register = () => {
                 logo_alignment="left"
                 width="100%"
               />
-            </div>
-            <div className="d-flex align-items-center mb-3">
+            </div>}
+            {googleEnabled && <div className="d-flex align-items-center mb-3">
               <hr className="flex-grow-1" />
               <span className="px-3 text-muted small">or register with email</span>
               <hr className="flex-grow-1" />
-            </div>
+            </div>}
 
             <form onSubmit={handleSubmit}>
               <div className="mb-3">

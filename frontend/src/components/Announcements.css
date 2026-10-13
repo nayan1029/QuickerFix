@@ -82,7 +82,7 @@
   line-height: 1.6;
 }
 
-.badge {
+.announcements-list .badge {
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 700;
@@ -91,18 +91,18 @@
   border-radius: 50px;
 }
 
-.badge.bg-danger {
+.announcements-list .badge.bg-danger {
   background: #e74c3c !important;
   box-shadow: 3px 3px 6px rgba(231, 76, 60, 0.35);
 }
 
-.badge.bg-warning {
+.announcements-list .badge.bg-warning {
   background: #f39c12 !important;
   color: #fff;
   box-shadow: 3px 3px 6px rgba(243, 156, 18, 0.35);
 }
 
-.badge.bg-info {
+.announcements-list .badge.bg-info {
   background: #2980b9 !important;
   box-shadow: 3px 3px 6px rgba(41, 128, 185, 0.35);
 }

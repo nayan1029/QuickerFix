@@ -6,13 +6,16 @@ import com.quickerfix.dto.request.RejectResolutionRequest;
 import com.quickerfix.dto.request.ReportRequest;
 import com.quickerfix.dto.request.StatusUpdateRequest;
 import com.quickerfix.dto.response.ApiResponse;
+import com.quickerfix.dto.response.CommentResponse;
+import com.quickerfix.dto.response.AttachmentResponse;
 import com.quickerfix.dto.response.ReportResponse;
+import jakarta.validation.Valid;
 import com.quickerfix.entity.Attachment;
-import com.quickerfix.entity.Comment;
 import com.quickerfix.entity.Rating;
 import com.quickerfix.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import com.quickerfix.enums.ReportStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,7 +35,7 @@ public class ReportController {
     @PostMapping
     @PreAuthorize("hasRole('CITIZEN')")
     public ResponseEntity<ApiResponse<ReportResponse>> createReport(
-            @RequestPart("request") ReportRequest request,
+            @Valid @RequestPart("request") ReportRequest request,
             @RequestPart(value = "photos", required = false) List<MultipartFile> photos) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ReportResponse response = reportService.createReport(request, photos, email);
@@ -42,8 +45,11 @@ public class ReportController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ReportResponse>>> getAllReports(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<ReportResponse> response = reportService.getAllReports(page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) ReportStatus status,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String query) {
+        Page<ReportResponse> response = reportService.getAllReports(Math.max(0, page), Math.max(1, Math.min(50, size)), status, categoryId, query);
         return ResponseEntity.ok(new ApiResponse<>(true, "Reports fetched successfully", response));
     }
 
@@ -79,10 +85,10 @@ public class ReportController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'WORKER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ReportResponse>> updateStatus(
             @PathVariable Long id,
-            @RequestBody StatusUpdateRequest request) {
+            @Valid @RequestBody StatusUpdateRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ReportResponse response = reportService.updateStatus(id, request, email);
         return ResponseEntity.ok(new ApiResponse<>(true, "Status updated successfully", response));
@@ -100,34 +106,35 @@ public class ReportController {
     @PreAuthorize("hasRole('CITIZEN')")
     public ResponseEntity<ApiResponse<ReportResponse>> rejectResolution(
             @PathVariable Long id,
-            @RequestBody RejectResolutionRequest request) {
+            @Valid @RequestBody RejectResolutionRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ReportResponse response = reportService.rejectResolution(id, request, email);
         return ResponseEntity.ok(ApiResponse.success("Resolution rejected successfully", response));
     }
 
     @PostMapping("/{id}/comments")
-    public ResponseEntity<ApiResponse<Comment>> addComment(
+    public ResponseEntity<ApiResponse<CommentResponse>> addComment(
             @PathVariable Long id,
-            @RequestBody CommentRequest request) {
+            @Valid @RequestBody CommentRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Comment comment = reportService.addComment(id, request, email);
+        CommentResponse comment = reportService.addComment(id, request, email);
         return new ResponseEntity<>(ApiResponse.success("Comment added successfully", comment), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<ApiResponse<List<Comment>>> getComments(@PathVariable Long id) {
-        List<Comment> comments = reportService.getComments(id);
+    public ResponseEntity<ApiResponse<List<CommentResponse>>> getComments(@PathVariable Long id) {
+        List<CommentResponse> comments = reportService.getComments(id);
         return ResponseEntity.ok(ApiResponse.success("Comments fetched successfully", comments));
     }
 
     @PostMapping("/{id}/attachments")
-    public ResponseEntity<ApiResponse<Attachment>> uploadAttachment(
+    public ResponseEntity<ApiResponse<AttachmentResponse>> uploadAttachment(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Attachment attachment = reportService.uploadAttachment(id, file, email, false);
-        return new ResponseEntity<>(ApiResponse.success("Attachment uploaded successfully", attachment), HttpStatus.CREATED);
+        AttachmentResponse response = new AttachmentResponse(attachment.getFileUrl(), attachment.isResolutionProof());
+        return new ResponseEntity<>(ApiResponse.success("Attachment uploaded successfully", response), HttpStatus.CREATED);
     }
 
     @PostMapping("/{id}/rate")

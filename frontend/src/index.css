@@ -399,25 +399,6 @@ a {
   box-shadow: 0 0 0 5px rgba(33, 184, 107, 0.25), 0 0 8px rgba(33, 184, 107, 0.6);
 }
 
-/* ── REPORT PREVIEW ───────────────────────────────────────── */
-.report-preview {
-  background: #e0e5ec;
-  border: none;
-  border-radius: 14px;
-  padding: 14px;
-  margin-top: 16px;
-  box-shadow: inset 4px 4px 8px #b8bec7, inset -4px -4px 8px #ffffff;
-}
-
-.report-preview strong {
-  font-size: 0.9rem;
-  color: var(--ink);
-}
-
-.report-preview small {
-  color: var(--muted);
-}
-
 /* ── METRIC STRIP & CARDS ─────────────────────────────────── */
 .metric-strip {
   margin-top: -47px;
@@ -638,34 +619,6 @@ a {
 .auth-card .lead {
   color: var(--muted);
   font-size: 0.95rem;
-}
-
-/* ── DEMO BUTTON ──────────────────────────────────────────── */
-.demo-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-align: left;
-  background: #e0e5ec;
-  border: none;
-  border-radius: 14px;
-  color: var(--muted);
-  box-shadow: var(--shadow-subtle);
-  padding: 12px 16px;
-  width: 100%;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.demo-button:hover {
-  color: var(--brand);
-  box-shadow: 0 4px 14px rgba(74, 124, 255, 0.2), 5px 5px 10px #b8bec7, -5px -5px 10px #ffffff;
-  transform: translateY(-1px);
-}
-
-.demo-button:active {
-  box-shadow: var(--shadow-inset-sm);
-  transform: translateY(0);
 }
 
 /* ── DASHBOARD HEADING ────────────────────────────────────── */

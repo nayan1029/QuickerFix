@@ -4,13 +4,12 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import AadharVerification from './pages/AadharVerification';
-import AdminRegistration from './pages/AdminRegistration';
 import CitizenPortal from './pages/CitizenPortal';
 import WorkerPortal from './pages/WorkerPortal';
 import AdminDashboard from './pages/AdminDashboard';
 import PriorityQueue from './pages/PriorityQueue';
 import ReportDetails from './pages/ReportDetails';
+import Announcements from './components/Announcements';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -29,11 +28,9 @@ const AppContent = () => {
       <Navbar />
       <main className="page-shell"><Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/notices" element={<Announcements />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/aadhar-verify" element={<AadharVerification />} />
-        <Route path="/admin-register" element={<AdminRegistration />} />
-        
         <Route path="/citizen" element={
           <ProtectedRoute allowedRole="CITIZEN">
             <CitizenPortal />

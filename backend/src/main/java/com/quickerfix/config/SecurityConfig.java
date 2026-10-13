@@ -34,6 +34,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/announcements", "/api/announcements/high-priority").permitAll()
                 // Complaint browsing is public; creating or changing a report requires a JWT.
                 .requestMatchers(HttpMethod.GET, "/api/reports/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()

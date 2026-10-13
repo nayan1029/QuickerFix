@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-import './preview.css';
 import App from './App';
 
 const container = document.getElementById('root');
@@ -12,10 +11,10 @@ const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId="974341447271-8eigpbt7jjng0sjfdg4rdkecdul34h7c.apps.googleusercontent.com">
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </GoogleOAuthProvider>
+    <BrowserRouter>
+      {process.env.REACT_APP_GOOGLE_CLIENT_ID ? (
+        <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}><App /></GoogleOAuthProvider>
+      ) : <App />}
+    </BrowserRouter>
   </React.StrictMode>
 );

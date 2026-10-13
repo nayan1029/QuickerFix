@@ -36,6 +36,9 @@ public class ReportResponse {
     private List<String> attachmentUrls;
     private Integer commentCount;
     private String assignedWorkerName;
+    private Long categoryDepartmentId;
+    private List<StatusHistoryResponse> statusHistory;
+    private List<AttachmentResponse> attachments;
     private boolean markedAsDuplicate;
     private Long duplicateOfReportId;
     private LocalDateTime closedAt;

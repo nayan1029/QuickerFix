@@ -6,8 +6,11 @@ import com.quickerfix.dto.request.RejectResolutionRequest;
 import com.quickerfix.dto.request.ReportRequest;
 import com.quickerfix.dto.request.StatusUpdateRequest;
 import com.quickerfix.dto.response.ReportResponse;
+import com.quickerfix.dto.response.CommentResponse;
 import com.quickerfix.entity.*;
 import com.quickerfix.enums.ReportStatus;
+import com.quickerfix.enums.Role;
+import com.quickerfix.enums.AssignmentStatus;
 import com.quickerfix.exception.DuplicateReportException;
 import com.quickerfix.exception.InvalidStatusTransitionException;
 import com.quickerfix.exception.ResourceNotFoundException;
@@ -40,6 +43,7 @@ public class ReportService {
     private final StatusHistoryRepository statusHistoryRepository;
     private final CommentRepository commentRepository;
     private final RatingRepository ratingRepository;
+    private final AssignmentRepository assignmentRepository;
     private final NotificationService notificationService;
     private final PriorityService priorityService;
     private final LocationUtils locationUtils;
@@ -103,8 +107,10 @@ public class ReportService {
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found")));
     }
 
-    public Page<ReportResponse> getAllReports(int page, int size) {
-        return reportRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "priorityScore")))
+    public Page<ReportResponse> getAllReports(int page, int size, ReportStatus status, Long categoryId, String query) {
+        String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
+        return reportRepository.searchQueue(true, ReportStatus.CLOSED, status, categoryId, normalizedQuery,
+                        PageRequest.of(page, size, Sort.by(Sort.Order.desc("priorityScore"), Sort.Order.desc("createdAt"))))
                 .map(this::mapToResponse);
     }
 
@@ -157,6 +163,10 @@ public class ReportService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        if (user.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("Only administrators can override report status");
+        }
+
         if (!report.getStatus().canTransitionTo(request.getNewStatus())) {
             throw new InvalidStatusTransitionException("Cannot transition from " + report.getStatus() + " to " + request.getNewStatus());
         }
@@ -174,14 +184,7 @@ public class ReportService {
 
         report = reportRepository.save(report);
 
-        StatusHistory history = new StatusHistory();
-        history.setReport(report);
-        history.setOldStatus(oldStatus);
-        history.setNewStatus(report.getStatus());
-        history.setChangedBy(user);
-        history.setRemark(request.getRemark());
-        history.setChangedAt(LocalDateTime.now());
-        statusHistoryRepository.save(history);
+        recordStatusChange(report, oldStatus, report.getStatus(), user, request.getRemark());
 
         notificationService.notifyStatusChange(report, report.getStatus());
 
@@ -198,11 +201,14 @@ public class ReportService {
         if (report.getStatus() != ReportStatus.CITIZEN_VERIFICATION) {
             throw new InvalidStatusTransitionException("Report not awaiting verification");
         }
-        
+        User citizen = userRepository.findByEmail(citizenEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Citizen not found"));
+        ReportStatus oldStatus = report.getStatus();
         report.setStatus(ReportStatus.CLOSED);
         report.setClosedAt(LocalDateTime.now());
         report = reportRepository.save(report);
-        
+        recordStatusChange(report, oldStatus, report.getStatus(), citizen, "Resolution confirmed by citizen");
+
         notificationService.notifyStatusChange(report, ReportStatus.CLOSED);
         return mapToResponse(report);
     }
@@ -218,9 +224,14 @@ public class ReportService {
             throw new InvalidStatusTransitionException("Report not awaiting verification");
         }
 
+        User citizen = userRepository.findByEmail(citizenEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Citizen not found"));
+        ReportStatus oldStatus = report.getStatus();
         report.setStatus(ReportStatus.REOPENED);
         report.setUpdatedAt(LocalDateTime.now());
         report = reportRepository.save(report);
+
+        recordStatusChange(report, oldStatus, report.getStatus(), citizen, request.getReason());
 
         notificationService.notifyStatusChange(report, ReportStatus.REOPENED);
         
@@ -228,11 +239,17 @@ public class ReportService {
     }
 
     @Transactional
-    public Comment addComment(Long reportId, CommentRequest request, String userEmail) {
+    public CommentResponse addComment(Long reportId, CommentRequest request, String userEmail) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        boolean assignedWorker = user.getRole() == Role.WORKER && assignmentRepository.findByReportAndWorker(report, user)
+                .filter(assignment -> assignment.getStatus() != AssignmentStatus.REJECTED).isPresent();
+        boolean reportOwner = user.getRole() == Role.CITIZEN && report.getCitizen().getId().equals(user.getId());
+        if (user.getRole() != Role.ADMIN && !assignedWorker && !reportOwner) {
+            throw new UnauthorizedException("Only the report owner, assigned worker, or an administrator can comment");
+        }
                 
         Comment comment = new Comment();
         comment.setReport(report);
@@ -240,13 +257,17 @@ public class ReportService {
         comment.setContent(request.getContent());
         comment.setCreatedAt(LocalDateTime.now());
         
-        return commentRepository.save(comment);
+        comment = commentRepository.save(comment);
+        return new CommentResponse(comment.getId(), user.getName(), comment.getContent(), comment.getCreatedAt());
     }
 
-    public List<Comment> getComments(Long reportId) {
+    public List<CommentResponse> getComments(Long reportId) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
-        return commentRepository.findByReportOrderByCreatedAtAsc(report);
+        return commentRepository.findByReportOrderByCreatedAtAsc(report).stream()
+                .map(comment -> new CommentResponse(comment.getId(), comment.getAuthor().getName(),
+                        comment.getContent(), comment.getCreatedAt()))
+                .toList();
     }
 
     @Transactional
@@ -255,6 +276,18 @@ public class ReportService {
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (isProof) {
+            if (user.getRole() != Role.WORKER
+                    || assignmentRepository.findByReportAndWorker(report, user)
+                    .filter(assignment -> assignment.getStatus() == AssignmentStatus.ACCEPTED)
+                    .isEmpty()) {
+                throw new UnauthorizedException("Only the assigned worker can upload resolution proof");
+            }
+        } else if (user.getRole() != Role.ADMIN
+                && (user.getRole() != Role.CITIZEN || !report.getCitizen().getId().equals(user.getId()))) {
+            throw new UnauthorizedException("Only the report owner can upload report attachments");
+        }
 
         String fileUrl = fileStorageService.storeFile(file, "reports/" + reportId);
         
@@ -317,13 +350,27 @@ public class ReportService {
         return report;
     }
 
+    private void recordStatusChange(Report report, ReportStatus oldStatus, ReportStatus newStatus,
+                                    User actor, String remark) {
+        StatusHistory history = new StatusHistory();
+        history.setReport(report);
+        history.setOldStatus(oldStatus);
+        history.setNewStatus(newStatus);
+        history.setChangedBy(actor);
+        history.setRemark(remark);
+        history.setChangedAt(LocalDateTime.now());
+        statusHistoryRepository.save(history);
+    }
+
     private ReportResponse mapToResponse(Report report) {
         ReportResponse r = new ReportResponse();
         r.setId(report.getId());
         r.setTitle(report.getTitle());
         r.setDescription(report.getDescription());
         r.setCategoryName(report.getCategory().getName());
-        r.setCitizenName(report.getCitizen().getName());
+        r.setCategoryIcon(report.getCategory().getIcon());
+        r.setCategoryDepartmentId(report.getCategory().getDepartment() == null ? null : report.getCategory().getDepartment().getId());
+        r.setCitizenId(report.getCitizen().getId());
         r.setLatitude(report.getLatitude());
         r.setLongitude(report.getLongitude());
         r.setAddress(report.getAddress());
@@ -338,6 +385,17 @@ public class ReportService {
         r.setUpdatedAt(report.getUpdatedAt());
         r.setResolvedAt(report.getResolvedAt());
         r.setClosedAt(report.getClosedAt());
+        r.setCommentCount((int) commentRepository.countByReportId(report.getId()));
+        r.setStatusHistory(statusHistoryRepository.findByReportIdOrderByChangedAtAsc(report.getId()).stream()
+                .map(history -> new com.quickerfix.dto.response.StatusHistoryResponse(
+                        history.getOldStatus(), history.getNewStatus(), history.getChangedBy().getName(),
+                        history.getRemark(), history.getChangedAt()))
+                .toList());
+        r.setAttachments(attachmentRepository.findByReportId(report.getId()).stream()
+                .map(attachment -> new com.quickerfix.dto.response.AttachmentResponse(
+                        attachment.getFileUrl(), attachment.isResolutionProof()))
+                .toList());
+        r.setAttachmentUrls(r.getAttachments().stream().map(com.quickerfix.dto.response.AttachmentResponse::url).toList());
         return r;
     }
 }
