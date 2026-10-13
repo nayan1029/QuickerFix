@@ -1,1 +1,10 @@
-.preview-banner { background:#e8f0ff; border-bottom:1px solid #c5d8ff; color:#164dcc; font-size:.82rem; font-weight:700; padding:9px 15px; text-align:center; }
+.preview-banner {
+  background: #e0e5ec;
+  color: #2c5cdb;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 10px 15px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(184, 190, 199, 0.6), 0 -4px 8px rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.02em;
+}

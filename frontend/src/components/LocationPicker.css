@@ -1,28 +1,35 @@
+/* =============================================
+   LocationPicker — Neumorphism UI
+   ============================================= */
+
 .location-picker {
   padding: 20px;
 }
 
 .location-controls {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
+  background: #e0e5ec;
+  padding: 18px;
+  border-radius: 16px;
   margin-bottom: 20px;
+  box-shadow: inset 4px 4px 8px #b8bec7, inset -4px -4px 8px #ffffff;
 }
 
 .map-container {
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 8px 8px 16px #b8bec7, -8px -8px 16px #ffffff;
   margin-bottom: 20px;
 }
 
 .location-info {
-  background-color: #e7f3ff;
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 4px solid #0066cc;
+  background: #e0e5ec;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border-left: 4px solid #4a7cff;
+  box-shadow: 4px 4px 8px #b8bec7, -4px -4px 8px #ffffff;
 }
 
 .location-info strong {
-  color: #0066cc;
+  color: #4a7cff;
+  font-weight: 700;
 }

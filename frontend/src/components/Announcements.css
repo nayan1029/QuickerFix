@@ -1,88 +1,118 @@
+/* =============================================
+   Announcements — Neumorphism UI
+   ============================================= */
+
 .announcements-container {
-  padding: 20px;
+  padding: 24px;
 }
 
 .high-priority-section {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-  padding: 20px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+  padding: 24px;
+  border-radius: 20px;
   color: white;
+  box-shadow: 8px 8px 16px rgba(192, 57, 43, 0.35), -4px -4px 12px rgba(255,255,255,0.12);
+  margin-bottom: 20px;
 }
 
 .high-priority-section h5 {
   color: white;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  border: none;
+  padding: 0;
+  margin-bottom: 16px;
 }
 
 .card-danger {
-  background-color: #ffe0e0;
-  border-color: #ff6b6b;
+  background: #e0e5ec;
+  border: none;
+  box-shadow: 8px 8px 16px #b8bec7, -8px -8px 16px #ffffff;
+  border-left: 4px solid #e74c3c !important;
 }
 
 .card-danger .card-body {
-  color: #333;
+  color: #2d3a52;
 }
 
 .announcements-list .card {
-  border: 1px solid #ddd;
-  transition: all 0.3s ease;
+  background: #e0e5ec;
+  border: none;
+  box-shadow: 6px 6px 12px #b8bec7, -6px -6px 12px #ffffff;
+  border-radius: 16px;
+  transition: all 0.25s ease;
+  margin-bottom: 14px;
 }
 
 .announcements-list .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 10px 10px 20px #b0b7c2, -8px -8px 16px #ffffff;
+  transform: translateY(-3px);
 }
 
 .announcements-list .card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #ddd;
-  transition: background-color 0.3s ease;
+  background: #e0e5ec;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  padding: 14px 18px;
+  box-shadow: 0 2px 4px rgba(184, 190, 199, 0.4);
+  transition: background-color 0.2s ease;
+  font-weight: 600;
 }
 
 .announcements-list .card-header:hover {
-  background-color: #e9ecef;
+  background: #dce1e8;
 }
 
 .announcements-list .card.unread {
-  border-left: 4px solid #007bff;
-  background-color: #f0f8ff;
+  border-left: 4px solid #4a7cff !important;
+  box-shadow: 6px 6px 12px #b8bec7, -6px -6px 12px #ffffff, -4px 0 0 #4a7cff;
 }
 
 .announcements-list .card.unread .card-header {
-  background-color: #e7f3ff;
-  font-weight: bold;
+  font-weight: 800;
+  color: #4a7cff;
 }
 
 .announcement-card .card-body {
   max-height: 200px;
   overflow: hidden;
+  padding: 14px 18px;
+  color: #2d3a52;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .badge {
   padding: 6px 12px;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 50px;
 }
 
 .badge.bg-danger {
-  background-color: #dc3545 !important;
+  background: #e74c3c !important;
+  box-shadow: 3px 3px 6px rgba(231, 76, 60, 0.35);
 }
 
 .badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: #000;
+  background: #f39c12 !important;
+  color: #fff;
+  box-shadow: 3px 3px 6px rgba(243, 156, 18, 0.35);
 }
 
 .badge.bg-info {
-  background-color: #17a2b8 !important;
+  background: #2980b9 !important;
+  box-shadow: 3px 3px 6px rgba(41, 128, 185, 0.35);
 }
 
 @media (max-width: 768px) {
   .announcements-container {
-    padding: 10px;
+    padding: 12px;
   }
 
   .announcement-card .card-body {
-    font-size: 14px;
+    font-size: 13px;
   }
 }

@@ -1,6 +1,10 @@
+/* =============================================
+   AdminRegistration — Neumorphism UI
+   ============================================= */
+
 .admin-registration-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #e0e5ec;
   padding: 40px 20px;
   display: flex;
   align-items: center;
@@ -8,94 +12,125 @@
 }
 
 .registration-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: #e0e5ec;
+  border-radius: 24px;
+  box-shadow: 12px 12px 24px #b8bec7, -12px -12px 24px #ffffff;
   max-width: 700px;
   width: 100%;
+  overflow: hidden;
+  border: none;
 }
 
 .registration-card .card-header {
-  border-radius: 12px 12px 0 0;
-  padding: 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 24px 24px 0 0;
+  padding: 30px 34px;
+  background: linear-gradient(135deg, #1a2f5a 0%, #0d1d3a 100%);
+  border-bottom: none;
 }
 
 .registration-card .card-header h3 {
   margin: 0;
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 22px;
+  font-weight: 800;
+  font-family: 'Manrope', sans-serif;
+  letter-spacing: -0.03em;
+  color: #fff;
 }
 
 .registration-card .card-header p {
-  margin: 5px 0 0 0;
-  opacity: 0.9;
+  margin: 6px 0 0 0;
+  opacity: 0.75;
+  font-size: 14px;
+  color: #b9c8df;
 }
 
 .registration-card .card-body {
-  padding: 40px;
+  padding: 36px 34px;
+  background: #e0e5ec;
 }
 
+/* Progress bar - neumorphic track */
 .progress {
   height: 8px;
   border-radius: 10px;
-  background-color: #e9ecef;
+  background: #e0e5ec;
+  box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff;
   overflow: hidden;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
+  border: none;
 }
 
 .progress-bar {
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  transition: width 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
+  background: linear-gradient(90deg, #4a7cff 0%, #2c5cdb 100%);
+  transition: width 0.4s ease;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(74, 124, 255, 0.5);
 }
 
 .form-label {
-  color: #333;
-  font-size: 14px;
+  color: #2d3a52;
+  font-size: 13px;
+  font-weight: 700;
   margin-bottom: 8px;
+  letter-spacing: 0.01em;
 }
 
 .form-control,
 .form-select {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px 12px;
+  background: #e0e5ec;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
   font-size: 14px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  color: #2d3a52;
+  box-shadow: inset 4px 4px 8px #b8bec7, inset -4px -4px 8px #ffffff;
+  transition: box-shadow 0.2s ease;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  outline: none;
+  box-shadow: inset 5px 5px 10px #b0b7c2, inset -5px -5px 10px #ffffff, 0 0 0 3px rgba(74, 124, 255, 0.25);
 }
 
 .form-control::placeholder {
-  color: #999;
+  color: #9aa4b8;
 }
 
 .alert {
-  border-radius: 6px;
+  border-radius: 14px;
   margin-bottom: 20px;
-  padding: 15px;
+  padding: 14px 16px;
+  border: none;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .alert-info {
-  background-color: #e7f3ff;
-  border: 1px solid #0066cc;
-  color: #004085;
+  background: #e0e5ec;
+  box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff;
+  border-left: 4px solid #4a7cff !important;
+  color: #2c5cdb;
 }
 
 .alert-warning {
-  background-color: #fff3cd;
-  border: 1px solid #ffc107;
-  color: #856404;
+  background: #e0e5ec;
+  box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff;
+  border-left: 4px solid #f39c12 !important;
+  color: #a06800;
+}
+
+.alert-light {
+  background: #e0e5ec;
+  box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff;
+  color: #6b7a9a;
+}
+
+.alert-danger {
+  background: #e0e5ec;
+  box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff;
+  border-left: 4px solid #e74c3c !important;
+  color: #c0392b;
 }
 
 .alert ul {
@@ -109,53 +144,69 @@
 }
 
 h5 {
-  color: #333;
-  font-weight: bold;
+  color: #2d3a52;
+  font-weight: 800;
+  font-family: 'Manrope', sans-serif;
   margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(184, 190, 199, 0.5);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4a7cff, #2c5cdb);
   border: none;
-  border-radius: 6px;
-  padding: 12px 30px;
-  font-weight: bold;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 5px 5px 15px rgba(74, 124, 255, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 7px 7px 18px rgba(74, 124, 255, 0.5), -3px -3px 8px rgba(255, 255, 255, 0.3);
   color: white;
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   transform: none;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-success {
-  background-color: #28a745;
+  background: linear-gradient(135deg, #27ae60, #1e8449);
   border: none;
-  border-radius: 6px;
-  padding: 12px 30px;
-  font-weight: bold;
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 5px 5px 12px rgba(39, 174, 96, 0.4), -3px -3px 8px rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
 }
 
 .btn-success:hover {
-  background-color: #218838;
   transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+  box-shadow: 7px 7px 16px rgba(39, 174, 96, 0.5), -3px -3px 8px rgba(255, 255, 255, 0.3);
 }
 
 .btn-outline-secondary {
-  border-radius: 6px;
-  padding: 12px 30px;
-  font-weight: bold;
+  background: #e0e5ec;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-weight: 700;
+  color: #6b7a9a;
+  box-shadow: 4px 4px 8px #b8bec7, -4px -4px 8px #ffffff;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+  color: #4a7cff;
+  box-shadow: 6px 6px 12px #b8bec7, -4px -4px 8px #ffffff;
+  transform: translateY(-1px);
 }
 
 .d-grid {
@@ -163,27 +214,35 @@ h5 {
   gap: 10px;
 }
 
+/* Success state */
 .success-message {
   padding: 40px 20px;
   text-align: center;
 }
 
-.success-message div {
+.success-message > div {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 72px;
+  height: 72px;
+  background: #e0e5ec;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  box-shadow: 6px 6px 12px #b8bec7, -6px -6px 12px #ffffff;
+  font-size: 28px;
 }
 
 .success-message h5 {
-  color: #28a745;
-  font-size: 24px;
+  color: #27ae60;
+  font-size: 22px;
   border: none;
   padding: 0;
   margin-bottom: 10px;
 }
 
 .success-message p {
-  color: #666;
+  color: #6b7a9a;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -200,11 +259,11 @@ h5 {
   }
 
   .registration-card .card-body {
-    padding: 20px;
+    padding: 22px 20px;
   }
 
   .registration-card .card-header {
-    padding: 20px;
+    padding: 22px 20px;
   }
 
   .registration-card .card-header h3 {
