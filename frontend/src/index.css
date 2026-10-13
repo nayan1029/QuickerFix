@@ -86,7 +86,15 @@ a {
   height: 36px;
   margin-right: 9px;
   vertical-align: middle;
-  filter: drop-shadow(0 3px 7px rgba(192, 48, 74, 0.35));
+  filter: drop-shadow(0 3px 7px rgba(17, 180, 83, 0.35));
+}
+
+.auth-brand-icon {
+  display: block;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto 12px;
 }
 
 .navbar .nav-link {

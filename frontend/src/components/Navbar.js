@@ -22,7 +22,7 @@ const Navbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark sticky-top">
       <div className="container">
-        <Link className="navbar-brand" to="/" onClick={close}><img className="brand-mark" src="/quickerfix-mark.svg" alt="" />QuickerFix</Link>
+        <Link className="navbar-brand" to="/" onClick={close}><img className="brand-mark" src="/quickerfix-icon.png" alt="" />QuickerFix</Link>
         <button className="navbar-toggler border-0 shadow-none" type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Toggle navigation">
           <span className="navbar-toggler-icon" />
         </button>

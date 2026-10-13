@@ -24,7 +24,7 @@ const Home = () => {
 
   return <>
     <section className="hero"><div className="container"><div className="row align-items-center g-5"><div className="col-lg-7"><div className="hero-content">
-      <span className="eyebrow"><span className="signal" />Civic issues, followed through</span>
+      <span className="eyebrow"><img src="/quickerfix-icon.png" alt="" width="24" height="24" />Civic issues, followed through</span>
       <h1>Better neighbourhoods start with one report.</h1>
       <p>Report a local problem, follow its progress, and see how your community and service teams respond.</p>
       <div className="d-flex flex-wrap gap-3 mt-4"><Link to={user ? workspace : '/register'} className="btn btn-primary btn-lg">{user ? 'Open your workspace' : 'Create an account'} <span className="ms-1">â†’</span></Link><a href="#how-it-works" className="btn btn-outline-light btn-lg">How it works</a></div>

@@ -86,6 +86,7 @@ const Login = () => {
 
         {/* Header */}
         <div className="text-center mb-4">
+          <img className="auth-brand-icon" src="/quickerfix-icon.png" alt="QuickerFix" />
           <span className="eyebrow">Welcome back</span>
           <h2 className="mt-3 mb-1">Sign in to QuickerFix</h2>
           <p className="lead mb-0">Choose your role and sign in below.</p>

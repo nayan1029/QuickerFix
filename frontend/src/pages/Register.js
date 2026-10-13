@@ -36,7 +36,7 @@ const Register = () => {
   return (
     <div className="auth-page">
       <div className="auth-card card">
-            <div className="text-center mb-4"><span className="eyebrow text-primary bg-white border">Community account</span>
+            <div className="text-center mb-4"><img className="auth-brand-icon" src="/quickerfix-icon.png" alt="QuickerFix" /><span className="eyebrow text-primary bg-white border">Community account</span>
             <h2 className="mt-3 mb-2">Start making a difference</h2><p className="lead mb-0">Create your citizen account to report and track local issues.</p></div>
             {error && <div className="alert alert-danger">{error}</div>}
 
