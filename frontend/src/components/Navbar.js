@@ -22,13 +22,14 @@ const Navbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark sticky-top">
       <div className="container">
-        <Link className="navbar-brand" to="/" onClick={close}><span className="brand-mark">✦</span>QuickerFix</Link>
+        <Link className="navbar-brand" to="/" onClick={close}><img className="brand-mark" src="/quickerfix-mark.svg" alt="" />QuickerFix</Link>
         <button className="navbar-toggler border-0 shadow-none" type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Toggle navigation">
           <span className="navbar-toggler-icon" />
         </button>
         <div className={`collapse navbar-collapse ${open ? 'show' : ''}`}>
           <ul className="navbar-nav me-auto">
             <li className="nav-item"><Link className="nav-link" to="/notices" onClick={close}>Noticeboard</Link></li>
+            <li className="nav-item"><Link className="nav-link" to="/contacts" onClick={close}>Emergency contacts</Link></li>
             {user && <li className="nav-item"><Link className="nav-link" to={workspace} onClick={close}>Workspace</Link></li>}
             {user?.role === 'ADMIN' && <li className="nav-item"><Link className="nav-link" to="/admin/priority" onClick={close}>Priority queue</Link></li>}
             {!user && <><li className="nav-item"><a className="nav-link" href="/#how-it-works" onClick={close}>How it works</a></li><li className="nav-item"><a className="nav-link" href="/#categories" onClick={close}>Categories</a></li></>}

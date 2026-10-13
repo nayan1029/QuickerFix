@@ -10,6 +10,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -33,8 +35,16 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/health", "/api/ready").permitAll()
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google").permitAll()
+                .requestMatchers("/api/auth/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/reports/my").hasRole("CITIZEN")
                 .requestMatchers(HttpMethod.GET, "/api/announcements", "/api/announcements/high-priority").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/contacts").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/contacts/manage").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/contacts").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/contacts/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/contacts/**").hasRole("ADMIN")
                 // Complaint browsing is public; creating or changing a report requires a JWT.
                 .requestMatchers(HttpMethod.GET, "/api/reports/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
@@ -47,6 +57,10 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, exception) -> response.sendError(401, "Authentication required"))
+                .accessDeniedHandler((request, response, exception) -> response.sendError(403, "Access denied"))
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

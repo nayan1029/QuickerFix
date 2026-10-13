@@ -15,7 +15,8 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Create a non-root user (UID 1000, compatible with Hugging Face Spaces and standard PaaS)
-RUN useradd -m -u 1000 appuser && \
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* && \
+    useradd -m -u 1000 appuser && \
     mkdir -p /app/uploads && \
     chown -R appuser:appuser /app
 

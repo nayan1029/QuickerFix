@@ -7,6 +7,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.quickerfix.dto.response.AuthResponse;
 import com.quickerfix.entity.User;
 import com.quickerfix.enums.Role;
+import com.quickerfix.exception.UnauthorizedException;
 import com.quickerfix.repository.UserRepository;
 import com.quickerfix.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,15 @@ public class GoogleAuthService {
         String googleId = payload.getSubject();
         String email    = payload.getEmail();
         String name     = (String) payload.get("name");
+        if (!Boolean.TRUE.equals(payload.getEmailVerified())) {
+            throw new UnauthorizedException("A verified Google email address is required");
+        }
 
         // 1. Try to find by googleId first (fastest path for returning users)
         Optional<User> byGoogleId = userRepository.findByGoogleId(googleId);
         if (byGoogleId.isPresent()) {
             User user = byGoogleId.get();
+            ensureEnabled(user);
             return toAuthResponse(jwtService.generateToken(user), user);
         }
 
@@ -48,6 +53,7 @@ public class GoogleAuthService {
         if (byEmail.isPresent()) {
             // Link the Google account to the existing user
             User user = byEmail.get();
+            ensureEnabled(user);
             user.setGoogleId(googleId);
             user = userRepository.save(user);
             return toAuthResponse(jwtService.generateToken(user), user);
@@ -65,6 +71,10 @@ public class GoogleAuthService {
 
         newUser = userRepository.save(newUser);
         return toAuthResponse(jwtService.generateToken(newUser), newUser);
+    }
+
+    private void ensureEnabled(User user) {
+        if (!user.isEnabled()) throw new UnauthorizedException("This account is disabled. Contact an administrator.");
     }
 
     private GoogleIdToken.Payload verifyToken(String idTokenString) {

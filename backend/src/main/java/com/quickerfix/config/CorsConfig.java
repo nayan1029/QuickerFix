@@ -30,10 +30,6 @@ public class CorsConfig {
             }
         }
         
-        // Also support any Vercel deployment URL and local development ports
-        origins.add("https://*.vercel.app");
-        origins.add("http://localhost:[*]");
-
         configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

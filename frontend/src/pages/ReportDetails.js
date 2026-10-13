@@ -18,6 +18,9 @@ const ReportDetails = () => {
   const [actionError, setActionError] = useState('');
   const [feedback, setFeedback] = useState('');
   const [saving, setSaving] = useState(false);
+  const [duplicateCandidates, setDuplicateCandidates] = useState([]);
+  const [duplicateError, setDuplicateError] = useState('');
+  const [linkingDuplicateId, setLinkingDuplicateId] = useState(null);
 
   const fetchReport = useCallback(async () => {
     setLoading(true); setError('');
@@ -39,7 +42,19 @@ const ReportDetails = () => {
     } finally { setCommentsLoading(false); }
   }, [id]);
 
-  useEffect(() => { fetchReport(); fetchComments(); }, [fetchReport, fetchComments]);
+  const fetchDuplicates = useCallback(async () => {
+    try { const response = await api.getDuplicateCandidates(id); setDuplicateCandidates(response.data || []); setDuplicateError(''); }
+    catch (requestError) { setDuplicateError(requestError.response?.data?.message || 'Similar reports could not be loaded.'); }
+  }, [id]);
+
+  useEffect(() => { fetchReport(); fetchComments(); fetchDuplicates(); }, [fetchReport, fetchComments, fetchDuplicates]);
+
+  const markDuplicate = async candidateId => {
+    setLinkingDuplicateId(candidateId); setActionError('');
+    try { await api.linkDuplicate(id, candidateId, 'Administrator confirmed a similar report'); setFeedback('Reports linked. Both citizen submissions remain available.'); await fetchReport(); await fetchDuplicates(); }
+    catch (requestError) { setActionError(requestError.response?.data?.message || 'The duplicate link could not be saved.'); }
+    finally { setLinkingDuplicateId(null); }
+  };
 
   const runAction = async (action, message) => {
     setSaving(true); setActionError(''); setFeedback('');
@@ -63,7 +78,7 @@ const ReportDetails = () => {
   if (loading) return <div className="container py-5 text-center" role="status">Loading report…</div>;
   if (error || !report) return <div className="container py-5"><div className="alert alert-danger" role="alert">{error || 'Report not found.'} <button className="btn btn-sm btn-outline-danger ms-2" onClick={fetchReport}>Retry</button></div><Link to="/citizen">Back to workspace</Link></div>;
 
-  const isOwner = user && user.id === report.citizenId;
+  const isOwner = Boolean(user && report.owner);
   const canComment = user && (user.role === 'ADMIN' || isOwner || user.role === 'WORKER');
 
   return (
@@ -78,6 +93,8 @@ const ReportDetails = () => {
           </article>
 
           <section className="card p-4 mb-4"><h2 className="h5">Evidence</h2><div className="d-flex flex-wrap gap-3">{report.attachments?.map((file, index) => <figure className="mb-0" key={`${file.url}-${index}`}><a href={api.getMediaUrl(file.url)} target="_blank" rel="noreferrer"><img src={api.getMediaUrl(file.url)} alt={file.resolutionProof ? 'Worker completion evidence' : 'Evidence submitted with the report'} className="img-thumbnail" style={{ maxWidth: 240, maxHeight: 220, objectFit: 'cover' }} /></a><figcaption className="small text-muted mt-1">{file.resolutionProof ? 'Completion evidence' : 'Report evidence'}</figcaption></figure>)}</div>{!report.attachments?.length && <p className="text-muted mb-0">No photos have been added to this report.</p>}</section>
+
+          {report.latitude != null && report.longitude != null && <section className="card p-4 mb-4"><h2 className="h5">Similar reports nearby</h2><p className="small text-muted">These reports share a category, location area, and some issue words. They are suggestions only.</p>{duplicateError && <div className="alert alert-warning" role="alert">{duplicateError} <button className="btn btn-sm btn-outline-secondary ms-2" onClick={fetchDuplicates}>Retry</button></div>}{duplicateCandidates.length ? duplicateCandidates.map(candidate => <article key={candidate.reportId} className="border-top py-3"><Link to={`/reports/${candidate.reportId}`} className="fw-semibold">{candidate.title}</Link><div className="small text-muted">{candidate.categoryName} · {Math.round(candidate.distanceMeters)} m away · {Math.round(candidate.similarity * 100)}% text overlap</div><div className="small">{candidate.reason}</div>{user?.role === 'ADMIN' && <button className="btn btn-sm btn-outline-warning mt-2" disabled={linkingDuplicateId != null} onClick={() => markDuplicate(candidate.reportId)}>{linkingDuplicateId === candidate.reportId ? 'Linking…' : 'Mark as related duplicate'}</button>}</article>) : !duplicateError && <p className="text-muted mb-0">No similar reports found within the current search window.</p>}</section>}
 
           <section className="card p-4"><div className="d-flex justify-content-between align-items-center mb-3"><h2 className="h5 mb-0">Updates and comments</h2><button className="btn btn-sm btn-outline-secondary" onClick={fetchComments} disabled={commentsLoading}>Refresh</button></div>{commentsLoading ? <p role="status">Loading updates…</p> : comments.length ? comments.map(comment => <article key={comment.id} className="border-bottom py-3"><div className="d-flex justify-content-between gap-2"><strong>{comment.authorName}</strong><time className="small text-muted">{new Date(comment.createdAt).toLocaleString()}</time></div><p className="mb-0 mt-2">{comment.content}</p></article>) : <p className="text-muted">No updates have been posted yet.</p>}
             {canComment ? <form className="mt-3" onSubmit={submitComment}><label className="form-label" htmlFor="report-comment">Add an update</label><div className="input-group"><input id="report-comment" className="form-control" value={newComment} onChange={event => setNewComment(event.target.value)} maxLength="2000" placeholder="Share useful information about this report" required /><button className="btn btn-primary" type="submit" disabled={saving || !newComment.trim()}>{saving ? 'Posting…' : 'Post'}</button></div></form> : <p className="small text-muted mt-3 mb-0">Sign in as the report owner or an assigned service team member to comment. <Link to="/login">Sign in</Link></p>}

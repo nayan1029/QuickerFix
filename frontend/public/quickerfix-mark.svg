@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">QuickerFix</title>
+  <defs>
+    <linearGradient id="rose" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e8607a"/>
+      <stop offset="1" stop-color="#c0304a"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="58" height="58" rx="18" fill="#1e2d22"/>
+  <path d="M32 10.5 52 22v20L32 53.5 12 42V22l20-11.5Z" fill="url(#rose)"/>
+  <path d="M22 31.5 29 38l14-15" fill="none" stroke="#fff8fc" stroke-linecap="round" stroke-linejoin="round" stroke-width="5.5"/>
+  <path d="M42.5 39.5h-5" stroke="#fff8fc" stroke-linecap="round" stroke-width="4"/>
+</svg>

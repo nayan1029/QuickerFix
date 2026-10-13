@@ -1,5 +1,5 @@
 /* =============================================
-   LocationPicker — Neumorphism UI
+   LocationPicker — Rose Garden UI
    ============================================= */
 
 .location-picker {
@@ -7,29 +7,29 @@
 }
 
 .location-controls {
-  background: #e0e5ec;
+  background: #f0dff1;
   padding: 18px;
   border-radius: 16px;
   margin-bottom: 20px;
-  box-shadow: inset 4px 4px 8px #b8bec7, inset -4px -4px 8px #ffffff;
+  box-shadow: inset 4px 4px 8px #d4c4d5, inset -4px -4px 8px #ffffff;
 }
 
 .map-container {
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 8px 8px 16px #b8bec7, -8px -8px 16px #ffffff;
+  box-shadow: 8px 8px 16px #d4c4d5, -8px -8px 16px #ffffff;
   margin-bottom: 20px;
 }
 
 .location-info {
-  background: #e0e5ec;
+  background: #f0dff1;
   padding: 16px 18px;
   border-radius: 14px;
-  border-left: 4px solid #4a7cff;
-  box-shadow: 4px 4px 8px #b8bec7, -4px -4px 8px #ffffff;
+  border-left: 4px solid #c23036;
+  box-shadow: 4px 4px 8px #d4c4d5, -4px -4px 8px #ffffff;
 }
 
 .location-info strong {
-  color: #4a7cff;
+  color: #c23036;
   font-weight: 700;
 }

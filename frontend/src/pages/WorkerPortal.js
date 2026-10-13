@@ -34,8 +34,10 @@ const WorkerPortal = () => {
       await action();
       setSuccess(message);
       await fetchAssignments();
+      return true;
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'The assignment could not be updated.');
+      return false;
     } finally {
       setActionId(null);
     }
@@ -51,8 +53,8 @@ const WorkerPortal = () => {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    await runAssignmentAction(reportId, () => api.resolveReport(reportId, data), 'Completion evidence submitted for citizen review.');
-    form.reset();
+    const submitted = await runAssignmentAction(reportId, () => api.resolveReport(reportId, data), 'Completion evidence submitted for citizen review.');
+    if (submitted) form.reset();
   };
 
   return (

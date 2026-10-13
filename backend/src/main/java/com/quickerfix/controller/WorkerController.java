@@ -3,6 +3,7 @@ package com.quickerfix.controller;
 import com.quickerfix.dto.response.ApiResponse;
 import com.quickerfix.dto.response.AssignmentResponse;
 import com.quickerfix.dto.response.ReportResponse;
+import com.quickerfix.dto.request.RejectAssignmentRequest;
 import com.quickerfix.entity.Assignment;
 import com.quickerfix.service.AssignmentService;
 import com.quickerfix.service.WorkerService;
@@ -50,10 +51,9 @@ public class WorkerController {
     @PutMapping("/assignments/{id}/reject")
     public ResponseEntity<ApiResponse<AssignmentResponse>> rejectAssignment(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
+            @jakarta.validation.Valid @RequestBody RejectAssignmentRequest request) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        String reason = body.getOrDefault("reason", "No reason provided");
-        Assignment assignment = assignmentService.rejectAssignment(id, reason, email);
+        Assignment assignment = assignmentService.rejectAssignment(id, request.reason(), email);
         return ResponseEntity.ok(new ApiResponse<>(true, "Assignment rejected", assignmentService.toResponse(assignment)));
     }
 

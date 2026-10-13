@@ -58,28 +58,6 @@ public class ReportService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
-        if (request.getLatitude() != null && request.getLongitude() != null) {
-            List<Report> nearbyOpenReports = getNearbyOpenReports(request.getLatitude(), request.getLongitude(), 100.0)
-                    .stream()
-                    .filter(r -> r.getCategory().getId().equals(category.getId()))
-                    .collect(Collectors.toList());
-
-            if (!nearbyOpenReports.isEmpty()) {
-                Report original = nearbyOpenReports.get(0);
-                original.setDuplicateCount(original.getDuplicateCount() + 1);
-                priorityService.recalculatePriority(original);
-                original = reportRepository.save(original);
-
-                if (photos != null && !photos.isEmpty()) {
-                    for (MultipartFile photo : photos) {
-                        uploadAttachment(original.getId(), photo, citizenEmail, false);
-                    }
-                }
-
-                return mapToResponse(original);
-            }
-        }
-
         Report report = buildReport(request, citizen, category);
         report = reportRepository.save(report);
 
@@ -103,8 +81,15 @@ public class ReportService {
     }
 
     public ReportResponse getReportById(Long id) {
-        return mapToResponse(reportRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Report not found")));
+        return getReportById(id, null);
+    }
+
+    public ReportResponse getReportById(Long id, String viewerEmail) {
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
+        ReportResponse response = mapToResponse(report);
+        response.setOwner(viewerEmail != null && report.getCitizen().getEmail().equalsIgnoreCase(viewerEmail));
+        return response;
     }
 
     public Page<ReportResponse> getAllReports(int page, int size, ReportStatus status, Long categoryId, String query) {
@@ -370,7 +355,6 @@ public class ReportService {
         r.setCategoryName(report.getCategory().getName());
         r.setCategoryIcon(report.getCategory().getIcon());
         r.setCategoryDepartmentId(report.getCategory().getDepartment() == null ? null : report.getCategory().getDepartment().getId());
-        r.setCitizenId(report.getCitizen().getId());
         r.setLatitude(report.getLatitude());
         r.setLongitude(report.getLongitude());
         r.setAddress(report.getAddress());

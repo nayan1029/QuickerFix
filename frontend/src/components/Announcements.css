@@ -1,5 +1,5 @@
 /* =============================================
-   Announcements — Neumorphism UI
+   Announcements — Rose Garden v2
    ============================================= */
 
 .announcements-container {
@@ -7,16 +7,17 @@
 }
 
 .high-priority-section {
-  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
-  padding: 24px;
+  background: linear-gradient(135deg, #8f1f33 0%, #c0304a 60%, #e8607a 100%);
+  padding: 26px;
   border-radius: 20px;
-  color: white;
-  box-shadow: 8px 8px 16px rgba(192, 57, 43, 0.35), -4px -4px 12px rgba(255,255,255,0.12);
+  color: #ffffff;
+  box-shadow: 8px 8px 20px rgba(143, 31, 51, 0.4), -4px -4px 12px rgba(255,255,255,0.08);
   margin-bottom: 20px;
+  border: 1px solid rgba(247, 184, 200, 0.15);
 }
 
 .high-priority-section h5 {
-  color: white;
+  color: #ffffff;
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   border: none;
@@ -25,86 +26,90 @@
 }
 
 .card-danger {
-  background: #e0e5ec;
+  background: #f8eaf5;
   border: none;
-  box-shadow: 8px 8px 16px #b8bec7, -8px -8px 16px #ffffff;
-  border-left: 4px solid #e74c3c !important;
+  border-left: 4px solid #c0304a !important;
+  box-shadow: 8px 8px 16px #dbbad4, -8px -8px 16px #ffffff;
 }
 
 .card-danger .card-body {
-  color: #2d3a52;
+  color: #1c0f14;
 }
 
 .announcements-list .card {
-  background: #e0e5ec;
-  border: none;
-  box-shadow: 6px 6px 12px #b8bec7, -6px -6px 12px #ffffff;
+  background: #f8eaf5;
+  border: 1px solid rgba(192, 48, 74, 0.08);
+  box-shadow: 6px 6px 14px #dbbad4, -6px -6px 14px #ffffff;
   border-radius: 16px;
   transition: all 0.25s ease;
   margin-bottom: 14px;
 }
 
 .announcements-list .card:hover {
-  box-shadow: 10px 10px 20px #b0b7c2, -8px -8px 16px #ffffff;
+  box-shadow: 10px 10px 22px #d4aeca, -8px -8px 18px #ffffff;
   transform: translateY(-3px);
+  border-color: rgba(192, 48, 74, 0.15);
 }
 
 .announcements-list .card-header {
-  background: #e0e5ec;
-  border-bottom: none;
+  background: #f8eaf5;
+  border-bottom: 1px solid rgba(192, 48, 74, 0.08);
   border-radius: 16px 16px 0 0;
-  padding: 14px 18px;
-  box-shadow: 0 2px 4px rgba(184, 190, 199, 0.4);
+  padding: 14px 20px;
+  color: #1c0f14;
   transition: background-color 0.2s ease;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .announcements-list .card-header:hover {
-  background: #dce1e8;
+  background: #f2ddf0;
 }
 
 .announcements-list .card.unread {
-  border-left: 4px solid #4a7cff !important;
-  box-shadow: 6px 6px 12px #b8bec7, -6px -6px 12px #ffffff, -4px 0 0 #4a7cff;
+  border-left: 4px solid #c0304a !important;
+  box-shadow: 6px 6px 14px #dbbad4, -6px -6px 14px #ffffff, -4px 0 0 #c0304a;
 }
 
 .announcements-list .card.unread .card-header {
   font-weight: 800;
-  color: #4a7cff;
+  color: #c0304a;
 }
 
 .announcement-card .card-body {
-  max-height: 200px;
+  max-height: 220px;
   overflow: hidden;
-  padding: 14px 18px;
-  color: #2d3a52;
+  padding: 16px 20px;
+  color: #3a2030;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .announcements-list .badge {
-  padding: 6px 12px;
-  font-size: 11px;
+  padding: 5px 12px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   border-radius: 50px;
 }
 
 .announcements-list .badge.bg-danger {
-  background: #e74c3c !important;
-  box-shadow: 3px 3px 6px rgba(231, 76, 60, 0.35);
+  background: linear-gradient(135deg, #c0304a, #8f1f33) !important;
+  color: #ffffff !important;
+  box-shadow: 2px 2px 6px rgba(192, 48, 74, 0.35);
 }
 
 .announcements-list .badge.bg-warning {
-  background: #f39c12 !important;
-  color: #fff;
-  box-shadow: 3px 3px 6px rgba(243, 156, 18, 0.35);
+  background: linear-gradient(135deg, #f7b8c8, #e8607a) !important;
+  color: #1c0f14 !important;
+  box-shadow: 2px 2px 6px rgba(232, 96, 122, 0.3);
 }
 
 .announcements-list .badge.bg-info {
-  background: #2980b9 !important;
-  box-shadow: 3px 3px 6px rgba(41, 128, 185, 0.35);
+  background: linear-gradient(135deg, #1e2d22, #2b3e2f) !important;
+  color: #d9c0d0 !important;
+  box-shadow: 2px 2px 6px rgba(30, 45, 34, 0.35);
 }
 
 @media (max-width: 768px) {

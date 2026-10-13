@@ -59,6 +59,12 @@ export const createReport = ({ title, description, categoryId, severity, address
 };
 export const getAllReports = (page = 0, size = 10) => api.get(`/reports?page=${page}&size=${size}`);
 export const getReportById = (id) => api.get(`/reports/${id}`);
+export const getDuplicateCandidates = (id) => api.get(`/reports/${id}/duplicates`);
+export const getAuthorityContacts = (params = {}) => api.get('/contacts', { params });
+export const getManagedAuthorityContacts = () => api.get('/contacts/manage');
+export const createAuthorityContact = (data) => api.post('/contacts', data);
+export const updateAuthorityContact = (id, data) => api.put(`/contacts/${id}`, data);
+export const withdrawAuthorityContact = (id) => api.delete(`/contacts/${id}`);
 export const getMyReports = () => api.get('/reports/my');
 export const getNearbyReports = (lat, lng, radius) => api.get(`/reports/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);
 export const upvoteReport = (id) => api.post(`/reports/${id}/upvote`);
@@ -71,6 +77,7 @@ export const rateReport = (id, data) => api.post(`/reports/${id}/rate`, data);
 
 // Admin
 export const getDashboard = () => api.get('/admin/dashboard');
+export const getAdminAnalytics = (params = {}) => api.get('/admin/analytics', { params });
 export const getPriorityQueue = (params = {}) => {
   const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== '' && value != null)).toString();
   return api.get(`/admin/reports/priority${query ? `?${query}` : ''}`);
@@ -81,6 +88,9 @@ export const createWorker = (data) => api.post('/admin/users/workers', data);
 export const toggleUser = (userId) => api.patch(`/admin/users/${userId}/toggle`);
 export const getAdminReports = (status) => api.get(`/admin/reports${status ? '?status=' + status : ''}`);
 export const deleteReport = (id) => api.delete(`/admin/reports/${id}`);
+export const getTriageSuggestion = (id) => api.get(`/admin/reports/${id}/triage`);
+export const reviewTriage = (id, data) => api.post(`/admin/reports/${id}/triage/review`, data);
+export const linkDuplicate = (reportId, canonicalId, note = '') => api.post(`/admin/reports/${reportId}/duplicates/${canonicalId}`, null, { params: { note } });
 export const createCategory = (data) => api.post('/admin/categories', data);
 export const createDepartment = (data) => api.post('/admin/departments', data);
 

@@ -9,7 +9,8 @@ public class ChatMessage {
  @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "report_id") private Report report;
  @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "sender_id") private User sender;
  @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "recipient_id") private User recipient;
- @Column(nullable = false, length = 1000) private String content;
+ @Convert(converter = com.quickerfix.security.EncryptedStringConverter.class)
+ @Column(nullable = false, length = 8192) private String content;
  @Column(nullable = false) private boolean read;
  @Column(nullable = false) private LocalDateTime createdAt;
 }

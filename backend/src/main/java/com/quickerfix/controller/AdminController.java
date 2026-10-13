@@ -2,18 +2,25 @@ package com.quickerfix.controller;
 
 import com.quickerfix.dto.request.AssignRequest;
 import com.quickerfix.dto.request.CreateWorkerRequest;
+import com.quickerfix.dto.request.TriageReviewRequest;
 import com.quickerfix.dto.response.ApiResponse;
 import com.quickerfix.dto.response.AssignmentResponse;
 import com.quickerfix.dto.response.CategoryResponse;
 import com.quickerfix.dto.response.DashboardResponse;
 import com.quickerfix.dto.response.ReportResponse;
 import com.quickerfix.dto.response.UserResponse;
+import com.quickerfix.dto.response.TriageSuggestionResponse;
+import com.quickerfix.dto.response.DuplicateCandidateResponse;
+import com.quickerfix.dto.response.AnalyticsResponse;
 import com.quickerfix.entity.Assignment;
 import com.quickerfix.entity.Category;
 import com.quickerfix.entity.Department;
 import com.quickerfix.enums.ReportStatus;
 import com.quickerfix.service.AdminService;
 import com.quickerfix.service.AssignmentService;
+import com.quickerfix.service.TriageService;
+import com.quickerfix.service.DuplicateService;
+import com.quickerfix.service.AnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +33,8 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -35,10 +44,21 @@ public class AdminController {
 
     private final AdminService adminService;
     private final AssignmentService assignmentService;
+    private final TriageService triageService;
+    private final DuplicateService duplicateService;
+    private final AnalyticsService analyticsService;
 
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<DashboardResponse>> getDashboard() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Dashboard fetched", adminService.getDashboard()));
+    }
+
+    @GetMapping("/analytics")
+    public ResponseEntity<ApiResponse<AnalyticsResponse>> getAnalytics(
+            @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required=false) Long categoryId) {
+        return ResponseEntity.ok(ApiResponse.success("Analytics fetched",analyticsService.get(from,to,categoryId)));
     }
 
     @GetMapping("/reports")
@@ -78,6 +98,32 @@ public class AdminController {
         String adminEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         Assignment assignment = assignmentService.assignWorker(id, request, adminEmail);
         return ResponseEntity.ok(new ApiResponse<>(true, "Worker assigned successfully", assignmentService.toResponse(assignment)));
+    }
+
+    @GetMapping("/reports/{id}/triage")
+    public ResponseEntity<ApiResponse<TriageSuggestionResponse>> suggestTriage(@PathVariable Long id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Triage suggestion generated", triageService.suggest(id, email)));
+    }
+
+    @PostMapping("/reports/{id}/triage/review")
+    public ResponseEntity<ApiResponse<Void>> reviewTriage(@PathVariable Long id, @Valid @RequestBody TriageReviewRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        triageService.review(id, request, email);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Triage reviewed and saved", null));
+    }
+
+    @GetMapping("/reports/{id}/duplicates")
+    public ResponseEntity<ApiResponse<List<DuplicateCandidateResponse>>> duplicateCandidates(@PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Duplicate candidates fetched", duplicateService.candidates(id)));
+    }
+
+    @PostMapping("/reports/{id}/duplicates/{canonicalId}")
+    public ResponseEntity<ApiResponse<Void>> linkDuplicate(@PathVariable Long id, @PathVariable Long canonicalId,
+            @RequestParam(required = false) String note) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        duplicateService.link(id, canonicalId, email, note);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Reports linked as possible duplicates", null));
     }
 
     @GetMapping("/users")

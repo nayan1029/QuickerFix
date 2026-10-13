@@ -21,7 +21,7 @@ public class ReportResponse {
     private String categoryName;
     private String categoryIcon;
     private String citizenName;
-    private Long citizenId;
+    private boolean owner;
     private Double latitude;
     private Double longitude;
     private String address;

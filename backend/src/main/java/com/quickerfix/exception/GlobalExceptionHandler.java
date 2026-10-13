@@ -3,6 +3,10 @@ package com.quickerfix.exception;
 import com.quickerfix.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -13,6 +17,7 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -24,6 +29,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiResponse<Void> handleUnauthorized(UnauthorizedException ex) {
         return ApiResponse.error(ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiResponse<Void> handleMethodAccessDenied(AuthorizationDeniedException ex) {
+        return ApiResponse.error("You do not have permission to perform this action");
     }
 
     @ExceptionHandler(InvalidStatusTransitionException.class)
@@ -64,9 +75,16 @@ public class GlobalExceptionHandler {
         return ApiResponse.error(ex.getMessage());
     }
 
+    @ExceptionHandler({IllegalStateException.class, DataIntegrityViolationException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiResponse<Void> handleConflict(RuntimeException ex) {
+        return ApiResponse.error("The requested change conflicts with the current application state");
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleAllOtherExceptions(Exception ex) {
-        return ApiResponse.error("An unexpected error occurred: " + ex.getMessage());
+        log.error("Unhandled request failure type={}", ex.getClass().getSimpleName());
+        return ApiResponse.error("An unexpected error occurred. Please try again later.");
     }
 }

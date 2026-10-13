@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import CitizenPortal from './pages/CitizenPortal';
-import WorkerPortal from './pages/WorkerPortal';
-import AdminDashboard from './pages/AdminDashboard';
-import PriorityQueue from './pages/PriorityQueue';
-import ReportDetails from './pages/ReportDetails';
-import Announcements from './components/Announcements';
 import { AuthProvider, useAuth } from './context/AuthContext';
+
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const CitizenPortal = lazy(() => import('./pages/CitizenPortal'));
+const WorkerPortal = lazy(() => import('./pages/WorkerPortal'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const PriorityQueue = lazy(() => import('./pages/PriorityQueue'));
+const ReportDetails = lazy(() => import('./pages/ReportDetails'));
+const Announcements = lazy(() => import('./components/Announcements'));
+const AuthorityContacts = lazy(() => import('./pages/AuthorityContacts'));
 
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user, loading } = useAuth();
@@ -26,9 +28,10 @@ const AppContent = () => {
   return (
     <>
       <Navbar />
-      <main className="page-shell"><Routes>
+      <main className="page-shell"><Suspense fallback={<div className="container py-5 text-center" role="status">Loading page…</div>}><Routes>
         <Route path="/" element={<Home />} />
         <Route path="/notices" element={<Announcements />} />
+        <Route path="/contacts" element={<AuthorityContacts />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/citizen" element={
@@ -60,7 +63,7 @@ const AppContent = () => {
             <PriorityQueue />
           </ProtectedRoute>
         } />
-      </Routes></main>
+      </Routes></Suspense></main>
     </>
   );
 };

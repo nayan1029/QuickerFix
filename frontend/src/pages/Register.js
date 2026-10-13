@@ -59,19 +59,20 @@ const Register = () => {
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label">Name</label>
-                <input type="text" name="name" className="form-control" onChange={handleChange} required />
+                <input type="text" name="name" className="form-control" maxLength="120" onChange={handleChange} required />
               </div>
               <div className="mb-3">
                 <label className="form-label">Email</label>
-                <input type="email" name="email" className="form-control" onChange={handleChange} required />
+                <input type="email" name="email" className="form-control" maxLength="254" onChange={handleChange} required />
               </div>
               <div className="mb-3">
                 <label className="form-label">Password</label>
-                <input type="password" name="password" className="form-control" onChange={handleChange} required />
+                <input type="password" name="password" className="form-control" minLength="12" maxLength="72" onChange={handleChange} required />
+                <div className="form-text">Use at least 12 characters.</div>
               </div>
               <div className="mb-3">
                 <label className="form-label">Phone</label>
-                <input type="text" name="phone" className="form-control" onChange={handleChange} required />
+                <input type="tel" name="phone" className="form-control" maxLength="32" onChange={handleChange} />
               </div>
               <div className="alert alert-light border small">
                 This form creates a citizen account. Worker and administrator accounts are issued through the municipal administration.

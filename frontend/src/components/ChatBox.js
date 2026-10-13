@@ -104,7 +104,7 @@ const ChatBox = ({ reportId, recipientId, recipientName }) => {
               <div className={`message-content alert ${msg.senderId === user.id ? 'alert-primary' : 'alert-secondary'}`}>
                 <small className="d-block text-muted">{msg.senderName}</small>
                 <p className="mb-1">{msg.content}</p>
-                <small className="text-muted">{formatTime(msg.timestamp)}</small>
+            <small className="text-muted">{formatTime(msg.createdAt)}</small>
                 {msg.isRead && msg.senderId !== user.id && (
                   <small className="d-block text-success">✓ Read</small>
                 )}

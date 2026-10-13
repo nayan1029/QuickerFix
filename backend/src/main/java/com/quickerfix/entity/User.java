@@ -37,6 +37,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Convert(converter = com.quickerfix.security.EncryptedStringConverter.class)
+    @Column(length = 255)
     private String phone;
 
     @Enumerated(EnumType.STRING)

@@ -8,6 +8,7 @@ import com.quickerfix.dto.response.AuthResponse;
 import com.quickerfix.dto.response.UserResponse;
 import com.quickerfix.service.AuthService;
 import com.quickerfix.service.GoogleAuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +24,13 @@ public class AuthController {
     private final GoogleAuthService googleAuthService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse authResponse = authService.register(request);
         return new ResponseEntity<>(new ApiResponse<>(true, "Registration successful", authResponse), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse authResponse = authService.login(request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", authResponse));
     }
